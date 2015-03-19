@@ -1,0 +1,80 @@
+﻿<Window x:Class="NetChat2Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Name="Me"
+        Title="NetChat2"
+        Height="350"
+        Width="525"
+        Background="#DAE1E3">
+    <Grid Margin="4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="5*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Margin="0 0 0 2" Text="{Binding ConnectionLabelText, ElementName=Me}" />
+
+        <RichTextBox x:Name="RichActivityBox"
+                     Grid.Row="1"
+                     Grid.Column="0"
+                     Margin="0 0 0 8"
+                     Background="#EEEEEE"
+                     IsReadOnly="True"
+                     VerticalScrollBarVisibility="Auto" />
+
+        <TextBox x:Name="EntryBox"
+                 Grid.Row="2"
+                 Grid.Column="0"
+                 Margin="0 0 0 8"
+                 KeyUp="EntryBox_OnKeyUp"
+                 TextWrapping="Wrap" />
+
+        <Grid Grid.Row="3" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Margin="0 0 4 0"
+                       VerticalAlignment="Center"
+                       Text="Nickname:" />
+
+            <TextBox x:Name="NickNameBox"
+                     Grid.Column="1"
+                     VerticalAlignment="Center"
+                     MaxLength="15"
+                     Text="somebody" />
+
+            <Button Grid.Column="2"
+                    Margin="8 0 0 0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Click="SendMessage_OnClick"
+                    Content="Send Message"
+                    Padding="8 4" />
+        </Grid>
+
+        <TextBlock Grid.Row="0"
+                   Grid.Column="1"
+                   Margin="4 0 4 2"
+                   VerticalAlignment="Center"
+                   Text="Other Users" />
+
+        <TextBox x:Name="ClientListBox"
+                 Grid.Row="1"
+                 Grid.RowSpan="3"
+                 Grid.Column="1"
+                 Margin="4 0"
+                 Background="#EEEEEE"
+                 Foreground="#333333"
+                 IsReadOnly="True"
+                 VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</Window>
