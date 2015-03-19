@@ -79,6 +79,7 @@ namespace NetChat2Client
 
             this.NickNameBox.Text = this.ChatClient.NickName;
             this.NickNameBox.LostFocus += this.NickNameBox_LostFocus;
+            this.RichActivityBox.Document.Blocks.Clear();
             this.RichActivityBox.TextChanged += (obj, textEventArgs) => this.RichActivityBox.ScrollToEnd();
 
             this.ChatClient.Start();
