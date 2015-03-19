@@ -7,14 +7,14 @@ using Newtonsoft.Json;
 
 namespace NetChat2Server
 {
-    public class Clientconnection
+    public class ClientConnection
     {
         private readonly Mutex _clientStreamMutex;
-        private readonly TcpServer _server;
+        private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
         private TcpClient _clientSocket;
 
-        public Clientconnection(TcpServer server)
+        public ClientConnection(ChatServer server)
         {
             this._server = server;
             this.IsConnected = true;

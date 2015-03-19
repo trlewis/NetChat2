@@ -8,19 +8,23 @@ using System.Threading;
 
 namespace NetChat2Server
 {
-    public class TcpServer
+    public class ChatServer
     {
         private readonly Mutex _clientListMutex;
         private readonly TcpListener _serverSocket;
-        private IList<Clientconnection> _clientConnections;
+        private IList<ClientConnection> _clientConnections;
 
-        public TcpServer()
+        public ChatServer()
         {
             this._clientListMutex = new Mutex();
-            this._clientConnections = new List<Clientconnection>();
-            this._serverSocket = new TcpListener(GetLocalIp(), 5311);
+            this._clientConnections = new List<ClientConnection>();
+
+            var localIp = GetLocalIp();
+            Console.WriteLine(">> Starting server on IP {0}", localIp);
+
+            this._serverSocket = new TcpListener(localIp, 5311);
             this._serverSocket.Start();
-            Console.WriteLine(">> Server Started");
+            Console.WriteLine(">> Server started");
 
             //start thread(s)
             var clientConnectThread = new Thread(this.ConnectToClientsThread);
@@ -30,7 +34,7 @@ namespace NetChat2Server
             cullConnectionsThread.Start();
         }
 
-        public void ConnectionDropped(Clientconnection connection, bool laggedOut)
+        public void ConnectionDropped(ClientConnection connection, bool laggedOut)
         {
             connection.IsConnected = false;
             Console.WriteLine(">> [{0}] ({1}) {2}", DateTime.Now, connection.NickName ?? connection.ClientNum, laggedOut ? "dropped" : "left");
@@ -47,7 +51,7 @@ namespace NetChat2Server
             this._clientListMutex.ReleaseMutex();
         }
 
-        public void IncomingMessage(Clientconnection connection, TcpMessage msg)
+        public void IncomingMessage(ClientConnection connection, TcpMessage msg)
         {
             var thread = new Thread(() => this.HandleIncomingMessage(connection, msg));
             thread.Start();
@@ -75,9 +79,9 @@ namespace NetChat2Server
                 //AcceptTcpClient() blocks, no need to sleep AFAIK
                 var clientSocket = this._serverSocket.AcceptTcpClient();
                 counter++;
-                Console.WriteLine("Client No:{0} started", counter);
+                Console.WriteLine(">> [{0}] Client No:{1} joined", DateTime.Now, counter);
 
-                var clientConnection = new Clientconnection(this);
+                var clientConnection = new ClientConnection(this);
                 if (!this._clientListMutex.WaitOne(250))
                 {
                     continue;
@@ -116,7 +120,7 @@ namespace NetChat2Server
             }
         }
 
-        private void HandleIncomingMessage(Clientconnection connection, TcpMessage msg)
+        private void HandleIncomingMessage(ClientConnection connection, TcpMessage msg)
         {
             if (!this._clientListMutex.WaitOne(250))
             {

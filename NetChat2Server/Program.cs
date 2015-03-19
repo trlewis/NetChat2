@@ -10,7 +10,7 @@ namespace NetChat2Server
             var version = ConfigurationManager.AppSettings["VersionNumber"];
             Console.WriteLine("NetChat2 server V{0}", version);
 
-            var server = new TcpServer();
+            var server = new ChatServer();
         }
     }
 }

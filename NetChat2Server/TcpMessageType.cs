@@ -6,13 +6,14 @@ namespace NetChat2Server
     public enum TcpMessageType
     {
         SystemMessage = 1, //not for general chatting
-        SilentData = 2,
-        ClientStarted = 4,
-        ClientJoined = 8,
-        ClientLeft = 16,
-        ClientDropped = 32,
-        NameChanged = 64, //is a SystemMessage
-        Message = 128,
-        UserList = 256,
+        ErrorMessage = 2,
+        SilentData = 4,
+        ClientStarted = 8,
+        ClientJoined = 16,
+        ClientLeft = 32,
+        ClientDropped = 64,
+        NameChanged = 128, //is a SystemMessage
+        Message = 256,
+        UserList = 512,
     }
 }

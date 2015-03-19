@@ -65,16 +65,22 @@
                    Grid.Column="1"
                    Margin="4 0 4 2"
                    VerticalAlignment="Center"
-                   Text="Other Users" />
+                   Text="Users" />
 
-        <TextBox x:Name="ClientListBox"
-                 Grid.Row="1"
-                 Grid.RowSpan="3"
-                 Grid.Column="1"
-                 Margin="4 0"
-                 Background="#EEEEEE"
-                 Foreground="#333333"
-                 IsReadOnly="True"
-                 VerticalScrollBarVisibility="Auto" />
+        <Border Grid.Row="1"
+                Grid.RowSpan="3"
+                Grid.Column="1"
+                Margin="4 0"
+                BorderBrush="Black"
+                BorderThickness="1"
+                Padding="2">
+            <ItemsControl ItemsSource="{Binding ChatClient.ClientList, ElementName=Me}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
     </Grid>
 </Window>
