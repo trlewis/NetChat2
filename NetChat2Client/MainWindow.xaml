@@ -44,9 +44,9 @@
             <TextBlock Grid.Column="0"
                        Margin="0 0 4 0"
                        VerticalAlignment="Center"
-                       Text="Nickname:" />
+                       Text="Alias:" />
 
-            <TextBox x:Name="NickNameBox"
+            <TextBox x:Name="AliasBox"
                      Grid.Column="1"
                      VerticalAlignment="Center"
                      MaxLength="15"

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -22,7 +23,9 @@ namespace NetChat2Server
             var localIp = GetLocalIp();
             Console.WriteLine(">> Starting server on IP {0}", localIp);
 
-            this._serverSocket = new TcpListener(localIp, 5311);
+            var port = int.Parse(ConfigurationManager.AppSettings["ServerPort"]);
+
+            this._serverSocket = new TcpListener(localIp, port);
             this._serverSocket.Start();
             Console.WriteLine(">> Server started");
 
@@ -37,7 +40,7 @@ namespace NetChat2Server
         public void ConnectionDropped(ClientConnection connection, bool laggedOut)
         {
             connection.IsConnected = false;
-            Console.WriteLine(">> [{0}] ({1}) {2}", DateTime.Now, connection.NickName ?? connection.ClientNum, laggedOut ? "dropped" : "left");
+            Console.WriteLine(">> [{0}] ({1}) {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, laggedOut ? "dropped" : "left");
             if (!this._clientListMutex.WaitOne(500))
             {
                 return;
@@ -90,7 +93,7 @@ namespace NetChat2Server
                 clientConnection.StartClient(clientSocket, counter.ToString(CultureInfo.InvariantCulture));
                 this._clientConnections.Add(clientConnection);
 
-                var clientNames = this._clientConnections.Where(c => c.IsConnected).Select(c => c.NickName).ToList();
+                var clientNames = this._clientConnections.Where(c => c.IsConnected).Select(c => c.Alias).ToList();
 
                 this._clientListMutex.ReleaseMutex();
 

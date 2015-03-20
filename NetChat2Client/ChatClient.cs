@@ -26,8 +26,10 @@ namespace NetChat2Client
             this._hostName = hostName;
             this._portNumber = portNumber;
             this.IncomingMessages = new ConcurrentQueue<TcpMessage>();
-            this.NickName = SystemHelper.GetCurrentUserName();
+            this.Alias = SystemHelper.GetCurrentUserName();
         }
+
+        public string Alias { get; private set; }
 
         public IList<string> ClientList
         {
@@ -49,19 +51,17 @@ namespace NetChat2Client
         /// </summary>
         public ConcurrentQueue<TcpMessage> IncomingMessages { get; private set; }
 
-        public string NickName { get; private set; }
-
-        public bool ChangeNickName(string nick)
+        public bool ChangeAlias(string alias)
         {
-            if (string.IsNullOrWhiteSpace(nick) || nick == this.NickName)
+            if (string.IsNullOrWhiteSpace(alias) || alias == this.Alias)
             {
                 return false;
             }
 
-            var oldName = this.NickName;
-            this.NickName = nick;
-            this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.NameChanged,
-                new List<string> { oldName, this.NickName });
+            var oldName = this.Alias;
+            this.Alias = alias;
+            this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.AliasChanged,
+                new List<string> { oldName, this.Alias });
             return true;
         }
 
@@ -114,7 +114,7 @@ namespace NetChat2Client
 
         public void ShutDown()
         {
-            this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.ClientLeft, new List<string> { this.NickName }, false);
+            this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.ClientLeft, new List<string> { this.Alias }, false);
             this._stopThreads = true;
         }
 
@@ -137,7 +137,7 @@ namespace NetChat2Client
                           {
                               SentTime = DateTime.Now,
                               MessageType = TcpMessageType.SystemMessage | TcpMessageType.ClientJoined,
-                              Contents = new List<string> { this.NickName }
+                              Contents = new List<string> { this.Alias }
                           };
             this.SendMessage(joinMsg);
         }
@@ -228,7 +228,7 @@ namespace NetChat2Client
                 this._clientList.Add(msg.Contents[0]);
                 this.NotifyPropertyChanged(() => this.ClientList);
             }
-            if (msg.MessageType.HasFlag(TcpMessageType.NameChanged))
+            if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
             {
                 if (this._clientList.Contains(msg.Contents[0]))
                 {

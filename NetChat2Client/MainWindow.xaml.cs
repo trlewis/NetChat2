@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shell;
 using NetChat2Server;
 
 namespace NetChat2Client
@@ -41,9 +43,41 @@ namespace NetChat2Client
             this.Load();
         }
 
+        private void AliasBoxLostFocus(object sender, RoutedEventArgs e)
+        {
+            var newName = ((TextBox)sender).Text.Trim();
+            if (this.ChatClient.ChangeAlias(newName))
+            {
+                this.AliasBox.Text = newName;
+            }
+        }
+
+        private void BlinkWindow()
+        {
+            var blink = new Thread(() =>
+            {
+                Func<bool> isactive = () => this.IsActive;
+                for (var i = 0; i < 5; i++)
+                {
+                    Dispatcher.Invoke(() => this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Paused);
+                    Thread.Sleep(500);
+                    Dispatcher.Invoke(() => this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None);
+                    Thread.Sleep(500);
+                    if (Dispatcher.Invoke(isactive))
+                    {
+                        break;
+                    }
+                }
+                if (!Dispatcher.Invoke(isactive))
+                {
+                    Dispatcher.Invoke(() => this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Paused);
+                }
+            });
+            blink.Start();
+        }
+
         private void ChatClient_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            //check this in xaml first
             if (e.PropertyName == "IncomingMessages")
             {
                 Dispatcher.Invoke(() =>
@@ -70,6 +104,9 @@ namespace NetChat2Client
 
         private void Load()
         {
+            this.TaskbarItemInfo = new TaskbarItemInfo { ProgressValue = 1 };
+            this.Activated += MainWindow_Activated;
+
             var hostName = ConfigurationManager.AppSettings["ServerIpAddress"];
             var port = int.Parse(ConfigurationManager.AppSettings["ServerPort"]);
 
@@ -77,14 +114,24 @@ namespace NetChat2Client
 
             this.ChatClient.PropertyChanged += ChatClient_PropertyChanged;
 
-            this.NickNameBox.Text = this.ChatClient.NickName;
-            this.NickNameBox.LostFocus += this.NickNameBox_LostFocus;
+            this.AliasBox.Text = this.ChatClient.Alias;
+            this.AliasBox.LostFocus += this.AliasBoxLostFocus;
             this.RichActivityBox.Document.Blocks.Clear();
             this.RichActivityBox.TextChanged += (obj, textEventArgs) => this.RichActivityBox.ScrollToEnd();
 
             this.ChatClient.Start();
             this.ConnectionLabelText = "Client Socket Program - Server Connected";
             this.Closed += this.MainWindow_Closed;
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            if (this.TaskbarItemInfo == null)
+            {
+                return;
+            }
+
+            this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
         }
 
         private void MainWindow_Closed(object sender, EventArgs e)
@@ -124,7 +171,7 @@ namespace NetChat2Client
                     if (tcpm.MessageType.HasFlag(TcpMessageType.ClientDropped))
                         msg += string.Format("[{0}] {1} dropped", timeStamp, tcpm.Contents[0]);
 
-                    if (tcpm.MessageType.HasFlag(TcpMessageType.NameChanged))
+                    if (tcpm.MessageType.HasFlag(TcpMessageType.AliasChanged))
                         msg += string.Format("[{0}] {1} is now {2}", timeStamp, tcpm.Contents[0], tcpm.Contents[1]);
 
                     var msgRun = new Run(msg) { Foreground = Brushes.Blue, FontWeight = FontWeights.Bold };
@@ -139,6 +186,11 @@ namespace NetChat2Client
                     var textRun = new Run(text);
                     par.Inlines.Add(nameRun);
                     par.Inlines.Add(textRun);
+
+                    if (text.Contains(string.Format("@{0}", this.ChatClient.Alias)) && !this.IsActive)
+                    {
+                        this.BlinkWindow();
+                    }
                 }
 
                 if (par.Inlines.Count <= 0)
@@ -147,15 +199,6 @@ namespace NetChat2Client
                 }
                 this.RichActivityBox.Document.Blocks.Add(par);
             });
-        }
-
-        private void NickNameBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            var newName = ((TextBox)sender).Text.Trim();
-            if (this.ChatClient.ChangeNickName(newName))
-            {
-                this.NickNameBox.Text = newName;
-            }
         }
 
         private void SendMessage_OnClick(object sender, RoutedEventArgs e)
@@ -179,7 +222,7 @@ namespace NetChat2Client
                        {
                            SentTime = DateTime.Now,
                            MessageType = TcpMessageType.Message,
-                           Contents = new List<string> { this.ChatClient.NickName, boxString }
+                           Contents = new List<string> { this.ChatClient.Alias, boxString }
                        };
 
             this.ChatClient.SendMessage(tcpm);

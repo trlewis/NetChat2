@@ -21,11 +21,11 @@ namespace NetChat2Server
             this._clientStreamMutex = new Mutex();
         }
 
+        public string Alias { get; set; }
+
         public string ClientNum { get; private set; }
 
         public bool IsConnected { get; set; }
-
-        public string NickName { get; set; }
 
         public void SendMessage(TcpMessage msg)
         {
@@ -95,13 +95,13 @@ namespace NetChat2Server
 
         private void HandleIncomingMessage(TcpMessage msg)
         {
-            if (msg.MessageType.HasFlag(TcpMessageType.NameChanged))
+            if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
             {
-                this.NickName = msg.Contents[1];
+                this.Alias = msg.Contents[1];
             }
             if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
             {
-                this.NickName = msg.Contents[0];
+                this.Alias = msg.Contents[0];
             }
 
             this._server.IncomingMessage(this, msg);

@@ -12,7 +12,7 @@ namespace NetChat2Server
         ClientJoined = 16,
         ClientLeft = 32,
         ClientDropped = 64,
-        NameChanged = 128, //is a SystemMessage
+        AliasChanged = 128, //is a SystemMessage
         Message = 256,
         UserList = 512,
     }
