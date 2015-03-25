@@ -15,5 +15,6 @@ namespace NetChat2Server
         AliasChanged = 128, //is a SystemMessage
         Message = 256,
         UserList = 512,
+        Heartbeat = 1024
     }
 }

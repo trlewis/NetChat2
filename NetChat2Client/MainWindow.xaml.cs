@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shell;
+using System.Windows.Threading;
 using NetChat2Server;
 
 namespace NetChat2Client
@@ -37,20 +38,26 @@ namespace NetChat2Client
 
         #endregion Dependency Properties
 
-        public MainWindow()
+        private readonly string _host;
+        private readonly int _port;
+        private DispatcherTimer _timer;
+
+        public MainWindow(string host, int port, string alias)
         {
             InitializeComponent();
-            this.Load();
+            this._host = host;
+            this._port = port;
+            this.Load(alias);
         }
 
-        private void AliasBoxLostFocus(object sender, RoutedEventArgs e)
-        {
-            var newName = ((TextBox)sender).Text.Trim();
-            if (this.ChatClient.ChangeAlias(newName))
-            {
-                this.AliasBox.Text = newName;
-            }
-        }
+        //private void AliasBoxLostFocus(object sender, RoutedEventArgs e)
+        //{
+        //    //var newName = ((TextBox)sender).Text.Trim();
+        //    //if (this.ChatClient.ChangeAlias(newName))
+        //    //{
+        //    //    this.AliasBox.Text = newName;
+        //    //}
+        //}
 
         private void BlinkWindow()
         {
@@ -102,26 +109,33 @@ namespace NetChat2Client
             }
         }
 
-        private void Load()
+        private void Load(string alias)
         {
             this.TaskbarItemInfo = new TaskbarItemInfo { ProgressValue = 1 };
             this.Activated += MainWindow_Activated;
 
-            var hostName = ConfigurationManager.AppSettings["ServerIpAddress"];
-            var port = int.Parse(ConfigurationManager.AppSettings["ServerPort"]);
-
-            this.ChatClient = new ChatClient(hostName, port);
+            this.ChatClient = new ChatClient(this._host, this._port, alias);
 
             this.ChatClient.PropertyChanged += ChatClient_PropertyChanged;
 
-            this.AliasBox.Text = this.ChatClient.Alias;
-            this.AliasBox.LostFocus += this.AliasBoxLostFocus;
+            //this.AliasBox.Text = this.ChatClient.Alias;
+            //this.AliasBox.LostFocus += this.AliasBoxLostFocus;
             this.RichActivityBox.Document.Blocks.Clear();
             this.RichActivityBox.TextChanged += (obj, textEventArgs) => this.RichActivityBox.ScrollToEnd();
 
             this.ChatClient.Start();
             this.ConnectionLabelText = "Client Socket Program - Server Connected";
             this.Closed += this.MainWindow_Closed;
+
+            this._timer = new DispatcherTimer();
+            this._timer.Tick += this.HeartbeatTimer_Tick;
+            this._timer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            this._timer.Start();
+        }
+
+        private void HeartbeatTimer_Tick(object sender, EventArgs e)
+        {
+            this.ChatClient.SendHeartbeat();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
@@ -182,12 +196,23 @@ namespace NetChat2Client
                 {
                     var name = tcpm.Contents[0];
                     var text = tcpm.Contents[1];
-                    var nameRun = new Run(string.Format("[{0}] {1}: ", timeStamp, name)) { FontWeight = FontWeights.Bold };
+                    var toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));
+
+                    var timeRun = new Run(string.Format("[{0}]", timeStamp)) { FontWeight = FontWeights.Bold};
+                    var nameRun = new Run(string.Format(" {1}: ", timeStamp, name)) { FontWeight = FontWeights.Bold };
                     var textRun = new Run(text);
+
+                    if(toMe)
+                    {
+                        timeRun.Foreground = new SolidColorBrush(Colors.DarkRed);
+                        textRun.Foreground = new SolidColorBrush(Colors.DarkRed);
+                    }
+
+                    par.Inlines.Add(timeRun);
                     par.Inlines.Add(nameRun);
                     par.Inlines.Add(textRun);
 
-                    if (text.Contains(string.Format("@{0}", this.ChatClient.Alias)) && !this.IsActive)
+                    if (toMe && !this.IsActive)
                     {
                         this.BlinkWindow();
                     }
@@ -229,6 +254,21 @@ namespace NetChat2Client
 
             this.EntryBox.Clear();
             this.EntryBox.Focus();
+        }
+
+        private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            //var red = this.ChatClient.NameColor.R;
+            //var green = this.ChatClient.NameColor.G;
+            //var blue = this.ChatClient.NameColor.B;
+            //System.Drawing.Color inColor = System.Drawing.Color.FromArgb(red, green, blue);
+            //var dialog = new System.Windows.Forms.ColorDialog { AllowFullOpen = false, Color = inColor, AnyColor = true };
+
+            //if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            //{
+            //    var newColor = System.Windows.Media.Color.FromArgb(255, (byte)dialog.Color.R, (byte)dialog.Color.G, (byte)dialog.Color.B);
+            //    this.ChatClient.NameColor = newColor;
+            //}
         }
     }
 }

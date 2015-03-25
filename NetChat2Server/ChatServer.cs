@@ -15,17 +15,16 @@ namespace NetChat2Server
         private readonly TcpListener _serverSocket;
         private IList<ClientConnection> _clientConnections;
 
-        public ChatServer()
+        public ChatServer(IPAddress addr)
         {
             this._clientListMutex = new Mutex();
             this._clientConnections = new List<ClientConnection>();
 
-            var localIp = GetLocalIp();
-            Console.WriteLine(">> Starting server on IP {0}", localIp);
+            Console.WriteLine(">> Starting server on IP {0}", addr);
 
             var port = int.Parse(ConfigurationManager.AppSettings["ServerPort"]);
 
-            this._serverSocket = new TcpListener(localIp, port);
+            this._serverSocket = new TcpListener(addr, port);
             this._serverSocket.Start();
             Console.WriteLine(">> Server started");
 
@@ -139,11 +138,6 @@ namespace NetChat2Server
             }
 
             this._clientListMutex.ReleaseMutex();
-
-            if (msg.MessageType.HasFlag(TcpMessageType.ClientDropped) || msg.MessageType.HasFlag(TcpMessageType.ClientLeft))
-            {
-                this.ConnectionDropped(connection, false);
-            }
         }
     }
 }

@@ -1,0 +1,44 @@
+﻿<Window x:Class="NetChat2Client.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ColorPickerWindow" Height="200" Width="300"
+        ResizeMode="NoResize"
+        Background="#DAE1E3"
+        x:Name="Me">
+    
+    <Grid Margin="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="R:" Margin="0 0 4 16"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
+            <Slider Grid.Row="0" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="G:" Margin="0 0 4 16"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
+            <Slider Grid.Row="1" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="B:" Margin="0 0 4 16"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
+            <Slider Grid.Row="2" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
+        </Grid>
+    </Grid>
+</Window>

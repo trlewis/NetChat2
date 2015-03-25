@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using NetChat2Server;
 using Newtonsoft.Json;
+using System.Windows.Media;
+
 
 namespace NetChat2Client
 {
@@ -21,12 +23,13 @@ namespace NetChat2Client
         private NetworkStream _serverStream;
         private bool _stopThreads;
 
-        public ChatClient(string hostName, int portNumber)
+        public ChatClient(string hostName, int portNumber, string alias = null)
         {
+            this.NameColor = Colors.Black;
             this._hostName = hostName;
             this._portNumber = portNumber;
             this.IncomingMessages = new ConcurrentQueue<TcpMessage>();
-            this.Alias = SystemHelper.GetCurrentUserName();
+            this.Alias = alias ?? SystemHelper.GetCurrentUserName();            
         }
 
         public string Alias { get; private set; }
@@ -43,6 +46,30 @@ namespace NetChat2Client
                 var returnList = new List<string>(this._clientList);
                 this._clientListMutex.ReleaseMutex();
                 return returnList;
+            }
+        }
+
+        public SolidColorBrush NameBrush
+        {
+            get
+            {
+                return new SolidColorBrush(this.NameColor);
+            }
+        }
+
+        private Color _nameColor;
+        public Color NameColor 
+        { 
+            get { return this._nameColor; }
+            set
+            {
+                if(value == null || value == this._nameColor)
+                {
+                    return;
+                }
+
+                this._nameColor = value;
+                this.NotifyPropertyChanged(() => this.NameBrush);
             }
         }
 
@@ -65,6 +92,12 @@ namespace NetChat2Client
             return true;
         }
 
+        public void SendHeartbeat()
+        {
+            var msg = new TcpMessage { MessageType = TcpMessageType.Heartbeat, SentTime = DateTime.Now };
+            this.SendMessage(msg);
+        }
+
         public void SendMessage(TcpMessageType type, IList<string> contents, bool async = true)
         {
             var msg = new TcpMessage
@@ -74,7 +107,7 @@ namespace NetChat2Client
                           Contents = contents
                       };
             this.SendMessage(msg, async);
-        }
+        }        
 
         public void SendMessage(TcpMessage msg, bool async = true)
         {

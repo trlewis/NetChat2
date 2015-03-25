@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using System.Configuration;
 
 namespace NetChat2Server
 {
@@ -13,12 +14,15 @@ namespace NetChat2Server
         private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
         private TcpClient _clientSocket;
+        private DateTime _lastHeartbeat;
+        private long _lagLimit;
 
         public ClientConnection(ChatServer server)
         {
             this._server = server;
             this.IsConnected = true;
             this._clientStreamMutex = new Mutex();
+            this._lagLimit = int.Parse(ConfigurationManager.AppSettings["ClientTimeout"]);
         }
 
         public string Alias { get; set; }
@@ -41,15 +45,25 @@ namespace NetChat2Server
 
             var clientThread = new Thread(() => ChatThread(bufferSize));
             clientThread.Start();
+
+            this._lastHeartbeat = DateTime.Now;
         }
 
         private void ChatThread(int bufferSize)
         {
             this._clientNetworkStream = this._clientSocket.GetStream();
 
-            while (true)
+            while (this.IsConnected)
             {
                 Thread.Sleep(2);
+
+                var lagTime = DateTime.Now - this._lastHeartbeat;
+                if(lagTime.TotalMilliseconds >= this._lagLimit)
+                {
+                    this._server.ConnectionDropped(this, true);
+                    break;
+                }
+
                 if (!this._clientSocket.Connected)
                 {
                     break;
@@ -90,7 +104,7 @@ namespace NetChat2Server
                     Console.WriteLine(">> Error in client #{0}: {1}", this.ClientNum, e);
                     this._server.ConnectionDropped(this, true);
                 }
-            }
+            }            
         }
 
         private void HandleIncomingMessage(TcpMessage msg)
@@ -99,9 +113,20 @@ namespace NetChat2Server
             {
                 this.Alias = msg.Contents[1];
             }
+
             if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
             {
                 this.Alias = msg.Contents[0];
+            }
+
+            if(msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
+            {
+                this._lastHeartbeat = DateTime.Now;
+            }
+
+            if(msg.MessageType.HasFlag(TcpMessageType.ClientLeft))
+            {
+                this._server.ConnectionDropped(this, false);
             }
 
             this._server.IncomingMessage(this, msg);
@@ -113,6 +138,7 @@ namespace NetChat2Server
             {
                 return;
             }
+
             var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
             var sendBytes = Encoding.UTF8.GetBytes(serialized);
 
