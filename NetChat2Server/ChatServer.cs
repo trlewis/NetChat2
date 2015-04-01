@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -15,14 +14,12 @@ namespace NetChat2Server
         private readonly TcpListener _serverSocket;
         private IList<ClientConnection> _clientConnections;
 
-        public ChatServer(IPAddress addr)
+        public ChatServer(IPAddress addr, int port)
         {
             this._clientListMutex = new Mutex();
             this._clientConnections = new List<ClientConnection>();
 
-            Console.WriteLine(">> Starting server on IP {0}", addr);
-
-            var port = int.Parse(ConfigurationManager.AppSettings["ServerPort"]);
+            Console.WriteLine(">> Starting NetChat2 server on {0}:{1}", addr, port);
 
             this._serverSocket = new TcpListener(addr, port);
             this._serverSocket.Start();
@@ -31,9 +28,6 @@ namespace NetChat2Server
             //start thread(s)
             var clientConnectThread = new Thread(this.ConnectToClientsThread);
             clientConnectThread.Start();
-
-            var cullConnectionsThread = new Thread(CullConnectionsThread);
-            cullConnectionsThread.Start();
         }
 
         public void ConnectionDropped(ClientConnection connection, bool laggedOut)
@@ -42,6 +36,7 @@ namespace NetChat2Server
             Console.WriteLine(">> [{0}] ({1}) {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, laggedOut ? "dropped" : "left");
             if (!this._clientListMutex.WaitOne(500))
             {
+                Console.WriteLine("Couldn't obtain client list mutex - ConnectionDropped()");
                 return;
             }
 
@@ -59,20 +54,6 @@ namespace NetChat2Server
             thread.Start();
         }
 
-        private static IPAddress GetLocalIp()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork && ip.ToString().StartsWith("172"))
-                {
-                    return ip;
-                }
-            }
-
-            return new IPAddress(new byte[] { 127, 0, 0, 1 });
-        }
-
         private void ConnectToClientsThread()
         {
             var counter = 0;
@@ -81,7 +62,7 @@ namespace NetChat2Server
                 //AcceptTcpClient() blocks, no need to sleep AFAIK
                 var clientSocket = this._serverSocket.AcceptTcpClient();
                 counter++;
-                Console.WriteLine(">> [{0}] Client No:{1} joined", DateTime.Now, counter);
+                Console.WriteLine(">> [{0}] Client No: {1} joined", DateTime.Now, counter);
 
                 var clientConnection = new ClientConnection(this);
                 if (!this._clientListMutex.WaitOne(250))
@@ -106,26 +87,14 @@ namespace NetChat2Server
             }
         }
 
-        private void CullConnectionsThread()
-        {
-            while (true)
-            {
-                Thread.Sleep(5);
-                if (!this._clientListMutex.WaitOne(250))
-                {
-                    continue;
-                }
-
-                this._clientConnections = this._clientConnections.Where(c => c.IsConnected).ToList();
-
-                this._clientListMutex.ReleaseMutex();
-            }
-        }
-
         private void HandleIncomingMessage(ClientConnection connection, TcpMessage msg)
         {
+            if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
+                return;
+
             if (!this._clientListMutex.WaitOne(250))
             {
+                Console.WriteLine("Couldn't obtain client list mutex");
                 return;
             }
 
@@ -135,6 +104,14 @@ namespace NetChat2Server
             foreach (var client in broadcastToList)
             {
                 client.SendMessage(msg);
+            }
+
+            if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ||
+                msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
+            {
+                Console.WriteLine(">> [{0}] Client No: {1} left", DateTime.Now, connection.Alias ?? connection.ClientNum);
+                connection.IsConnected = false;
+                this._clientConnections.Remove(connection);
             }
 
             this._clientListMutex.ReleaseMutex();

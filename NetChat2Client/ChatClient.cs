@@ -5,10 +5,9 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Windows.Media;
 using NetChat2Server;
 using Newtonsoft.Json;
-using System.Windows.Media;
-
 
 namespace NetChat2Client
 {
@@ -20,6 +19,7 @@ namespace NetChat2Client
         private readonly Mutex _streamMutex = new Mutex();
         private List<string> _clientList = new List<string>();
         private TcpClient _clientSocket = new TcpClient();
+        private Color _nameColor;
         private NetworkStream _serverStream;
         private bool _stopThreads;
 
@@ -29,7 +29,7 @@ namespace NetChat2Client
             this._hostName = hostName;
             this._portNumber = portNumber;
             this.IncomingMessages = new ConcurrentQueue<TcpMessage>();
-            this.Alias = alias ?? SystemHelper.GetCurrentUserName();            
+            this.Alias = alias ?? SystemHelper.GetCurrentUserName();
         }
 
         public string Alias { get; private set; }
@@ -49,6 +49,11 @@ namespace NetChat2Client
             }
         }
 
+        /// <summary>
+        /// This is what whatever uses this class will use to do whatever they need to do when a message comes in
+        /// </summary>
+        public ConcurrentQueue<TcpMessage> IncomingMessages { get; private set; }
+
         public SolidColorBrush NameBrush
         {
             get
@@ -57,13 +62,12 @@ namespace NetChat2Client
             }
         }
 
-        private Color _nameColor;
-        public Color NameColor 
-        { 
+        public Color NameColor
+        {
             get { return this._nameColor; }
             set
             {
-                if(value == null || value == this._nameColor)
+                if (value == null || value == this._nameColor)
                 {
                     return;
                 }
@@ -73,13 +77,9 @@ namespace NetChat2Client
             }
         }
 
-        /// <summary>
-        /// This is what whatever uses this class will use to do whatever they need to do when a message comes in
-        /// </summary>
-        public ConcurrentQueue<TcpMessage> IncomingMessages { get; private set; }
-
         public bool ChangeAlias(string alias)
         {
+            //this method currently isn't used, user must reopen program to change alias
             if (string.IsNullOrWhiteSpace(alias) || alias == this.Alias)
             {
                 return false;
@@ -107,7 +107,7 @@ namespace NetChat2Client
                           Contents = contents
                       };
             this.SendMessage(msg, async);
-        }        
+        }
 
         public void SendMessage(TcpMessage msg, bool async = true)
         {
@@ -224,7 +224,7 @@ namespace NetChat2Client
                                    {
                                        SentTime = DateTime.Now,
                                        MessageType = TcpMessageType.ErrorMessage,
-                                       Contents = new List<string> { e.ToString() }
+                                       Contents = new List<string> { "JsonReaderException caught" }
                                    };
                     this.MessageReceived(errorMsg);
                 }
@@ -242,7 +242,12 @@ namespace NetChat2Client
 
             if (msg.MessageType.HasFlag(TcpMessageType.UserList))
             {
-                this._clientList = new List<string>(msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n)));
+                var list = new List<string>(msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n))).ToList();
+                if (!list.Contains(this.Alias))
+                {
+                    list.Add(this.Alias);
+                }
+                this._clientList = list;
                 this.NotifyPropertyChanged(() => this.ClientList);
             }
 

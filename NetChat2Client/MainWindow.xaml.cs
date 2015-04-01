@@ -48,6 +48,9 @@ namespace NetChat2Client
             this._host = host;
             this._port = port;
             this.Load(alias);
+
+            //this.GotFocus += (o, e) => this.RichActivityBox.Visibility = Visibility.Visible;
+            //this.LostFocus += (o, e) => this.RichActivityBox.Visibility = Visibility.Collapsed;
         }
 
         //private void AliasBoxLostFocus(object sender, RoutedEventArgs e)
@@ -58,6 +61,21 @@ namespace NetChat2Client
         //    //    this.AliasBox.Text = newName;
         //    //}
         //}
+
+        private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            //var red = this.ChatClient.NameColor.R;
+            //var green = this.ChatClient.NameColor.G;
+            //var blue = this.ChatClient.NameColor.B;
+            //System.Drawing.Color inColor = System.Drawing.Color.FromArgb(red, green, blue);
+            //var dialog = new System.Windows.Forms.ColorDialog { AllowFullOpen = false, Color = inColor, AnyColor = true };
+
+            //if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            //{
+            //    var newColor = System.Windows.Media.Color.FromArgb(255, (byte)dialog.Color.R, (byte)dialog.Color.G, (byte)dialog.Color.B);
+            //    this.ChatClient.NameColor = newColor;
+            //}
+        }
 
         private void BlinkWindow()
         {
@@ -109,6 +127,11 @@ namespace NetChat2Client
             }
         }
 
+        private void HeartbeatTimer_Tick(object sender, EventArgs e)
+        {
+            this.ChatClient.SendHeartbeat();
+        }
+
         private void Load(string alias)
         {
             this.TaskbarItemInfo = new TaskbarItemInfo { ProgressValue = 1 };
@@ -129,13 +152,8 @@ namespace NetChat2Client
 
             this._timer = new DispatcherTimer();
             this._timer.Tick += this.HeartbeatTimer_Tick;
-            this._timer.Interval = new TimeSpan(0, 0, 0, 0, 500);
+            this._timer.Interval = new TimeSpan(0, 0, 0, 0, 750);
             this._timer.Start();
-        }
-
-        private void HeartbeatTimer_Tick(object sender, EventArgs e)
-        {
-            this.ChatClient.SendHeartbeat();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
@@ -198,11 +216,11 @@ namespace NetChat2Client
                     var text = tcpm.Contents[1];
                     var toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));
 
-                    var timeRun = new Run(string.Format("[{0}]", timeStamp)) { FontWeight = FontWeights.Bold};
+                    var timeRun = new Run(string.Format("[{0}]", timeStamp)) { FontWeight = FontWeights.Bold };
                     var nameRun = new Run(string.Format(" {1}: ", timeStamp, name)) { FontWeight = FontWeights.Bold };
                     var textRun = new Run(text);
 
-                    if(toMe)
+                    if (toMe)
                     {
                         timeRun.Foreground = new SolidColorBrush(Colors.DarkRed);
                         textRun.Foreground = new SolidColorBrush(Colors.DarkRed);
@@ -254,21 +272,6 @@ namespace NetChat2Client
 
             this.EntryBox.Clear();
             this.EntryBox.Focus();
-        }
-
-        private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //var red = this.ChatClient.NameColor.R;
-            //var green = this.ChatClient.NameColor.G;
-            //var blue = this.ChatClient.NameColor.B;
-            //System.Drawing.Color inColor = System.Drawing.Color.FromArgb(red, green, blue);
-            //var dialog = new System.Windows.Forms.ColorDialog { AllowFullOpen = false, Color = inColor, AnyColor = true };
-
-            //if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            //{
-            //    var newColor = System.Windows.Media.Color.FromArgb(255, (byte)dialog.Color.R, (byte)dialog.Color.G, (byte)dialog.Color.B);
-            //    this.ChatClient.NameColor = newColor;
-            //}
         }
     }
 }

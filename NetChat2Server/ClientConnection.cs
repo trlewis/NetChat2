@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
-using System.Configuration;
 
 namespace NetChat2Server
 {
@@ -14,8 +14,8 @@ namespace NetChat2Server
         private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
         private TcpClient _clientSocket;
-        private DateTime _lastHeartbeat;
         private long _lagLimit;
+        private DateTime _lastHeartbeat;
 
         public ClientConnection(ChatServer server)
         {
@@ -58,7 +58,7 @@ namespace NetChat2Server
                 Thread.Sleep(2);
 
                 var lagTime = DateTime.Now - this._lastHeartbeat;
-                if(lagTime.TotalMilliseconds >= this._lagLimit)
+                if (lagTime.TotalMilliseconds >= this._lagLimit)
                 {
                     this._server.ConnectionDropped(this, true);
                     break;
@@ -99,16 +99,24 @@ namespace NetChat2Server
                         }
                     }
                 }
+                catch (JsonReaderException e)
+                {
+                    Console.WriteLine(">> Error parsing JSON from client {0}", this.Alias ?? this.ClientNum);
+                }
                 catch (Exception e)
                 {
                     Console.WriteLine(">> Error in client #{0}: {1}", this.ClientNum, e);
-                    this._server.ConnectionDropped(this, true);
                 }
-            }            
+            }
         }
 
         private void HandleIncomingMessage(TcpMessage msg)
         {
+            if (!msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
+            {
+                this._server.IncomingMessage(this, msg);
+            }
+
             if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
             {
                 this.Alias = msg.Contents[1];
@@ -119,17 +127,10 @@ namespace NetChat2Server
                 this.Alias = msg.Contents[0];
             }
 
-            if(msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
+            if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
             {
                 this._lastHeartbeat = DateTime.Now;
             }
-
-            if(msg.MessageType.HasFlag(TcpMessageType.ClientLeft))
-            {
-                this._server.ConnectionDropped(this, false);
-            }
-
-            this._server.IncomingMessage(this, msg);
         }
 
         private void SendMessageThread(TcpMessage msg)

@@ -10,7 +10,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="5*" />
-            <!--<RowDefinition Height="*" />-->
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -28,43 +27,26 @@
                      IsReadOnly="True"
                      VerticalScrollBarVisibility="Auto" />
 
-        <!--<TextBox x:Name="EntryBox"
-                 Grid.Row="2"
-                 Grid.Column="0"
-                 Margin="0 0 0 8"
-                 KeyUp="EntryBox_OnKeyUp"
-                 TextWrapping="Wrap" />-->
-
-        <Grid Grid.Row="3" Grid.Column="0">
+        <Grid Grid.Row="2" Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <!--<TextBlock Grid.Column="0"
-                       Margin="0 0 4 0"
-                       VerticalAlignment="Center"
-                       Text="Alias:" />-->
 
-            <!--<TextBox x:Name="AliasBox"
-                     Grid.Column="1"
-                     VerticalAlignment="Center"
-                     MaxLength="15"
-                     Text="somebody" />-->
-            
-            <TextBlock Grid.Column="0" Cursor="Hand"
+            <TextBlock Grid.Column="0"
+                       Margin="0 0 2 0"
+                       VerticalAlignment="Center"
+                       Cursor="Hand"
                        FontWeight="Bold"
-                       Text="{Binding ChatClient.Alias, ElementName=Me, FallbackValue=name}" 
                        Foreground="{Binding ChatClient.NameBrush, ElementName=Me}"
-                       VerticalAlignment="Center" 
                        MouseLeftButtonUp="Alias_MouseLeftButtonUp"
-                       Margin="0 0 2 0"/>
+                       Text="{Binding ChatClient.Alias, ElementName=Me, FallbackValue=name}" />
 
             <TextBox x:Name="EntryBox"
-                 Grid.Column="1"
-                 KeyUp="EntryBox_OnKeyUp"
+                     Grid.Column="1"
                      VerticalAlignment="Center"
-                 TextWrapping="Wrap" />
+                     KeyUp="EntryBox_OnKeyUp" />
 
             <Button Grid.Column="2"
                     Margin="8 0 0 0"
