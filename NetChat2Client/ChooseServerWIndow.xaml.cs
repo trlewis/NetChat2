@@ -1,59 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Configuration;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using System.Configuration;
 
 namespace NetChat2Client
 {
-    public partial class ChooseServerWindow : Window
+    public partial class ChooseServerWindow
     {
-        #region Dependency Properties
-
-        
-        public static readonly DependencyProperty HostProperty = DependencyProperty.Register("Host", typeof(string), typeof(ChooseServerWindow));
-
-        public string Host
-        {
-            get { return (string)GetValue(HostProperty); }
-            set { SetValue(HostProperty, value); }
-        }
-
-        
-        public static readonly DependencyProperty PortNumberProperty = DependencyProperty.Register("PortNumber", typeof(string), typeof(ChooseServerWindow));
-
-        public string PortNumber
-        {
-            get { return (string)GetValue(PortNumberProperty); }
-            set { SetValue(PortNumberProperty, value); }
-        }
-
-        
-        public static readonly DependencyProperty AliasProperty = DependencyProperty.Register("Alias", typeof(string), typeof(ChooseServerWindow));
-
-        public string Alias
-        {
-            get { return (string)GetValue(AliasProperty); }
-            set { SetValue(AliasProperty, value); }
-        }				
-
-        #endregion Dependency Properties
-
         public ChooseServerWindow()
         {
             InitializeComponent();
-            this.PortNumber = ConfigurationManager.AppSettings["ServerPort"];
-            this.Alias = SystemHelper.GetCurrentUserName();
+            this.PortNumberBox.Text = ConfigurationManager.AppSettings["ServerPort"];
+            this.AliasBox.Text = SystemHelper.GetCurrentUserName();
+            this.HostBox.Focus();
+        }
+
+        private void CreateChatWindow()
+        {
+            //TODO: make sure all fields have a value. verify ip is in "*.*.*.*" format. verify port number/range.
+            var host = this.HostBox.Text;
+            var portNum = int.Parse(this.PortNumberBox.Text);
+            var alias = this.AliasBox.Text.Trim();
+            var win = new MainWindow(host, portNum, alias);
+            win.Show();
+            this.Close();
         }
 
         private void EnterChat_Click(object sender, RoutedEventArgs e)
         {
-            //TODO: make sure all fields have a value. verify ip is in "*.*.*.*" format. verify port number/range. 
-            var portNum = int.Parse(this.PortNumber);
-            var win = new MainWindow(this.Host, portNum, this.Alias);
-            win.Show();
-            this.Close();
+            this.CreateChatWindow();
+        }
+
+        private void TextBox_OnGotFocus(object sender, RoutedEventArgs e)
+        {
+            var textbox = (TextBox)sender;
+            textbox.SelectAll();
+        }
+
+        private void TextBox_OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter || e.Key == Key.Return)
+            {
+                this.CreateChatWindow();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Net.Sockets;
@@ -11,10 +12,10 @@ namespace NetChat2Server
     public class ClientConnection
     {
         private readonly Mutex _clientStreamMutex;
+        private readonly long _lagLimit;
         private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
         private TcpClient _clientSocket;
-        private long _lagLimit;
         private DateTime _lastHeartbeat;
 
         public ClientConnection(ChatServer server)
@@ -25,15 +26,45 @@ namespace NetChat2Server
             this._lagLimit = int.Parse(ConfigurationManager.AppSettings["ClientTimeout"]);
         }
 
-        public string Alias { get; set; }
+        public string Alias { get; private set; }
 
         public string ClientNum { get; private set; }
 
         public bool IsConnected { get; set; }
 
-        public void SendMessage(TcpMessage msg)
+        public void SendMessage(TcpMessage message)
         {
-            var thread = new Thread(() => this.SendMessageThread(msg));
+            Action<TcpMessage> sendThread = msg =>
+            {
+                var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
+                var sendBytes = Encoding.UTF8.GetBytes(serialized);
+
+                if (!this._clientSocket.Connected)
+                {
+                    return;
+                }
+
+                if (!this._clientStreamMutex.WaitOne(250))
+                {
+                    return;
+                }
+
+                try
+                {
+                    this._clientNetworkStream.Write(sendBytes, 0, sendBytes.Length);
+                    this._clientNetworkStream.Flush();
+                }
+                catch (IOException)
+                {
+                    this.DropConnection();
+                }
+                finally
+                {
+                    this._clientStreamMutex.ReleaseMutex();
+                }
+            };
+
+            var thread = new Thread(() => sendThread(message));
             thread.Start();
         }
 
@@ -60,26 +91,28 @@ namespace NetChat2Server
                 var lagTime = DateTime.Now - this._lastHeartbeat;
                 if (lagTime.TotalMilliseconds >= this._lagLimit)
                 {
-                    this._server.ConnectionDropped(this, true);
+                    this.DropConnection();
                     break;
                 }
 
                 if (!this._clientSocket.Connected)
                 {
+                    this.IsConnected = false;
                     break;
                 }
 
                 try
                 {
+                    var dataFromClient = string.Empty;
+                    var readBuffer = new byte[bufferSize];
+
                     if (!this._clientStreamMutex.WaitOne(250))
                     {
                         continue;
                     }
 
-                    var dataFromClient = string.Empty;
                     if (this._clientNetworkStream.CanRead && this._clientNetworkStream.DataAvailable)
                     {
-                        var readBuffer = new byte[bufferSize];
                         do
                         {
                             var bytesRead = this._clientNetworkStream.Read(readBuffer, 0,
@@ -99,7 +132,7 @@ namespace NetChat2Server
                         }
                     }
                 }
-                catch (JsonReaderException e)
+                catch (JsonReaderException)
                 {
                     Console.WriteLine(">> Error parsing JSON from client {0}", this.Alias ?? this.ClientNum);
                 }
@@ -110,11 +143,23 @@ namespace NetChat2Server
             }
         }
 
+        private void DropConnection()
+        {
+            var msg = new TcpMessage
+                      {
+                          SentTime = DateTime.Now,
+                          MessageType = TcpMessageType.ClientDropped | TcpMessageType.SystemMessage,
+                          Contents = new List<string> { this.Alias }
+                      };
+
+            this._server.HandleIncomingMessage(this, msg);
+        }
+
         private void HandleIncomingMessage(TcpMessage msg)
         {
             if (!msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
             {
-                this._server.IncomingMessage(this, msg);
+                this._server.HandleIncomingMessage(this, msg);
             }
 
             if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
@@ -130,36 +175,6 @@ namespace NetChat2Server
             if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
             {
                 this._lastHeartbeat = DateTime.Now;
-            }
-        }
-
-        private void SendMessageThread(TcpMessage msg)
-        {
-            if (!this._clientStreamMutex.WaitOne(250))
-            {
-                return;
-            }
-
-            var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
-            var sendBytes = Encoding.UTF8.GetBytes(serialized);
-
-            try
-            {
-                if (!this._clientSocket.Connected)
-                {
-                    return;
-                }
-
-                this._clientNetworkStream.Write(sendBytes, 0, sendBytes.Length);
-                this._clientNetworkStream.Flush();
-            }
-            catch (IOException)
-            {
-                this._server.ConnectionDropped(this, true);
-            }
-            finally
-            {
-                this._clientStreamMutex.ReleaseMutex();
             }
         }
     }

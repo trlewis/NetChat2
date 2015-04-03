@@ -33,31 +33,35 @@
                    Margin="0 1 0 0"
                    HorizontalAlignment="Right"
                    Text="Host:" />
-        <TextBox Grid.Row="1"
+        <TextBox x:Name="HostBox"
+                 Grid.Row="1"
                  Grid.Column="2"
                  Margin="0 0 0 8"
-                 Text="{Binding Host, ElementName=Me, Mode=TwoWay}" />
+                 GotFocus="TextBox_OnGotFocus"
+                 KeyUp="TextBox_OnKeyUp" />
 
         <TextBlock Grid.Row="2"
                    Grid.Column="0"
                    Margin="0 1 0 0"
                    HorizontalAlignment="Right"
                    Text="Port:" />
-        <TextBox Grid.Row="2"
+        <TextBox x:Name="PortNumberBox"
+                 Grid.Row="2"
                  Grid.Column="2"
                  Margin="0 0 0 8"
-                 Text="{Binding PortNumber, ElementName=Me, Mode=TwoWay}" />
+                 GotFocus="TextBox_OnGotFocus" />
 
         <TextBlock Grid.Row="3"
                    Grid.Column="0"
                    Margin="0 1 0 0"
                    HorizontalAlignment="Right"
                    Text="Alias:" />
-        <TextBox Grid.Row="3"
+        <TextBox x:Name="AliasBox"
+                 Grid.Row="3"
                  Grid.Column="2"
                  Margin="0 0 0 8"
-                 MaxLength="15"
-                 Text="{Binding Alias, ElementName=Me, Mode=TwoWay}" />
+                 GotFocus="TextBox_OnGotFocus"
+                 MaxLength="15" />
 
         <Button Grid.Row="5"
                 Grid.Column="0"

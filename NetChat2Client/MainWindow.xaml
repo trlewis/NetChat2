@@ -34,8 +34,6 @@
             </MenuItem>
         </Menu>
 
-        <!--  <TextBlock Margin="0 0 0 2" Text="{Binding ConnectionLabelText, ElementName=Me}" />  -->
-
         <RichTextBox x:Name="RichActivityBox"
                      Grid.Row="1"
                      Grid.RowSpan="2"

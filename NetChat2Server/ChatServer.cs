@@ -10,9 +10,9 @@ namespace NetChat2Server
 {
     public class ChatServer
     {
+        private readonly IList<ClientConnection> _clientConnections;
         private readonly Mutex _clientListMutex;
         private readonly TcpListener _serverSocket;
-        private IList<ClientConnection> _clientConnections;
 
         public ChatServer(IPAddress addr, int port)
         {
@@ -30,27 +30,42 @@ namespace NetChat2Server
             clientConnectThread.Start();
         }
 
-        public void ConnectionDropped(ClientConnection connection, bool laggedOut)
+        public void HandleIncomingMessage(ClientConnection clientConnection, TcpMessage message)
         {
-            connection.IsConnected = false;
-            Console.WriteLine(">> [{0}] ({1}) {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, laggedOut ? "dropped" : "left");
-            if (!this._clientListMutex.WaitOne(500))
+            Action<ClientConnection, TcpMessage> handleMessageThread = (connection, msg) =>
             {
-                Console.WriteLine("Couldn't obtain client list mutex - ConnectionDropped()");
-                return;
-            }
+                if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
+                {
+                    return;
+                }
 
-            if (this._clientConnections.Contains(connection))
-            {
-                this._clientConnections.Remove(connection);
-            }
+                if (!this._clientListMutex.WaitOne(250))
+                {
+                    Console.WriteLine("Couldn't obtain client list mutex");
+                    return;
+                }
 
-            this._clientListMutex.ReleaseMutex();
-        }
+                var broadcastToList =
+                    this._clientConnections.Where(c => c.ClientNum != connection.ClientNum && connection.IsConnected).ToList();
 
-        public void IncomingMessage(ClientConnection connection, TcpMessage msg)
-        {
-            var thread = new Thread(() => this.HandleIncomingMessage(connection, msg));
+                foreach (var client in broadcastToList)
+                {
+                    client.SendMessage(msg);
+                }
+
+                if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ||
+                    msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
+                {
+                    connection.IsConnected = false;
+                    var leftType = msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ? "left" : "dropped";
+                    Console.WriteLine(">> [{0}] Client No: {1} {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, leftType);
+                    this._clientConnections.Remove(connection);
+                }
+
+                this._clientListMutex.ReleaseMutex();
+            };
+
+            var thread = new Thread(() => handleMessageThread(clientConnection, message));
             thread.Start();
         }
 
@@ -85,36 +100,6 @@ namespace NetChat2Server
                               };
                 clientConnection.SendMessage(listMsg);
             }
-        }
-
-        private void HandleIncomingMessage(ClientConnection connection, TcpMessage msg)
-        {
-            if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
-                return;
-
-            if (!this._clientListMutex.WaitOne(250))
-            {
-                Console.WriteLine("Couldn't obtain client list mutex");
-                return;
-            }
-
-            var broadcastToList =
-                this._clientConnections.Where(c => c.ClientNum != connection.ClientNum && connection.IsConnected).ToList();
-
-            foreach (var client in broadcastToList)
-            {
-                client.SendMessage(msg);
-            }
-
-            if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ||
-                msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
-            {
-                Console.WriteLine(">> [{0}] Client No: {1} left", DateTime.Now, connection.Alias ?? connection.ClientNum);
-                connection.IsConnected = false;
-                this._clientConnections.Remove(connection);
-            }
-
-            this._clientListMutex.ReleaseMutex();
         }
     }
 }

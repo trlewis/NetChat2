@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Media;
 
 namespace NetChat2Server
 {
@@ -11,7 +10,5 @@ namespace NetChat2Server
         public TcpMessageType MessageType { get; set; }
 
         public DateTime SentTime { get; set; }
-
-        public Color Color { get; set; }
     }
 }

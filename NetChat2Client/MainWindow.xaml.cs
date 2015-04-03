@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Documents;
-using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shell;
@@ -39,7 +38,7 @@ namespace NetChat2Client
 
         #endregion Dependency Properties
 
-        private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu)(\/.+)*(\.\w+)?\/?$";
+        private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu|ru|co)(\/.+)*(\.\w+)?\/?$";
 
         private readonly string _host;
         private readonly int _port;
@@ -95,11 +94,15 @@ namespace NetChat2Client
                     Dispatcher.Invoke(() => this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None);
                     Thread.Sleep(500);
                     if (Dispatcher.Invoke(isactive))
+                    {
                         break;
+                    }
                 }
 
                 if (!Dispatcher.Invoke(isactive))
+                {
                     Dispatcher.Invoke(() => this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.Paused);
+                }
             });
             blink.Start();
         }
@@ -141,7 +144,9 @@ namespace NetChat2Client
             var par = new Paragraph { Margin = new Thickness(0) };
 
             if (!msg.MessageType.HasFlag(TcpMessageType.Message))
+            {
                 return null;
+            }
 
             var timeStamp = msg.SentTime.ToString("HH:mm:ss");
 
@@ -152,18 +157,35 @@ namespace NetChat2Client
             var toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));
 
             if (toMe)
+            {
                 timeRun.Foreground = new SolidColorBrush(Colors.DarkRed);
+            }
 
             par.Inlines.Add(timeRun);
             par.Inlines.Add(nameRun);
 
             var urlRegex = new Regex(UrlRegex);
             var words = text.Split(' ');
+            var nonLinkString = string.Empty;
+
             foreach (var wordTemp in words)
             {
                 var word = wordTemp;
                 if (urlRegex.IsMatch(word))
                 {
+                    //probably a better idea to have all the words that aren't links in one run, rather than a run for
+                    //every word that isn't a link. so many objects that way...
+                    if (!string.IsNullOrWhiteSpace(nonLinkString))
+                    {
+                        var wordRun = new Run(nonLinkString);
+                        if (toMe)
+                        {
+                            wordRun.Foreground = new SolidColorBrush(Colors.DarkRed);
+                        }
+                        par.Inlines.Add(wordRun);
+                        nonLinkString = string.Empty;
+                    }
+
                     var link = new Hyperlink { IsEnabled = true, NavigateUri = new Uri(word) };
                     link.Inlines.Add(word);
                     link.Cursor = Cursors.Hand;
@@ -172,14 +194,21 @@ namespace NetChat2Client
 
                     par.Inlines.Add(link);
                     par.Inlines.Add(" "); //seperate the link from the following word
-                    continue;
                 }
+                else
+                {
+                    nonLinkString += word + " ";
+                }
+            }
 
-                var wordRun = new Run(word + " ");
+            if (!string.IsNullOrWhiteSpace(nonLinkString))
+            {
+                var lastWordRun = new Run(nonLinkString);
                 if (toMe)
-                    wordRun.Foreground = new SolidColorBrush(Colors.DarkRed);
-
-                par.Inlines.Add(wordRun);
+                {
+                    lastWordRun.Foreground = new SolidColorBrush(Colors.DarkRed);
+                }
+                par.Inlines.Add(lastWordRun);
             }
 
             return par;
@@ -227,7 +256,9 @@ namespace NetChat2Client
         private void MainWindow_Activated(object sender, EventArgs e)
         {
             if (this.TaskbarItemInfo == null)
+            {
                 return;
+            }
 
             this.TaskbarItemInfo.ProgressState = TaskbarItemProgressState.None;
         }
@@ -258,19 +289,29 @@ namespace NetChat2Client
                     var msg = ">> ";
 
                     if (tcpm.MessageType.HasFlag(TcpMessageType.ClientStarted))
+                    {
                         msg += string.Format("[{0}] Client Started", timeStamp);
+                    }
 
                     if (tcpm.MessageType.HasFlag(TcpMessageType.ClientJoined))
+                    {
                         msg += string.Format("[{0}] {1} joined", timeStamp, tcpm.Contents[0]);
+                    }
 
                     if (tcpm.MessageType.HasFlag(TcpMessageType.ClientLeft))
+                    {
                         msg += string.Format("[{0}] {1} left", timeStamp, tcpm.Contents[0]);
+                    }
 
                     if (tcpm.MessageType.HasFlag(TcpMessageType.ClientDropped))
+                    {
                         msg += string.Format("[{0}] {1} dropped", timeStamp, tcpm.Contents[0]);
+                    }
 
                     if (tcpm.MessageType.HasFlag(TcpMessageType.AliasChanged))
+                    {
                         msg += string.Format("[{0}] {1} is now {2}", timeStamp, tcpm.Contents[0], tcpm.Contents[1]);
+                    }
 
                     var msgRun = new Run(msg) { Foreground = Brushes.Blue, FontWeight = FontWeights.Bold };
                     par.Inlines.Add(msgRun);
@@ -282,11 +323,15 @@ namespace NetChat2Client
                     par = this.ConstructMessageParagraph(tcpm);
 
                     if (toMe && !this.IsActive)
+                    {
                         this.BlinkWindow();
+                    }
                 }
 
                 if (par.Inlines.Count > 0)
+                {
                     this.RichActivityBox.Document.Blocks.Add(par);
+                }
             });
         }
 
@@ -309,7 +354,9 @@ namespace NetChat2Client
         private void SendUserMessage()
         {
             if (this.ChatClient == null)
+            {
                 return;
+            }
 
             var boxString = this.EntryBox.Text.Trim();
             if (boxString.Length <= 0)
