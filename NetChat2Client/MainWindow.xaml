@@ -9,6 +9,7 @@
     <Grid Margin="4">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="5*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -17,17 +18,35 @@
             <ColumnDefinition Width="125" />
         </Grid.ColumnDefinitions>
 
-        <TextBlock Margin="0 0 0 2" Text="{Binding ConnectionLabelText, ElementName=Me}" />
+        <Menu Grid.Row="0"
+              Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Margin="-4 -4 -4 4"
+              IsMainMenu="True">
+            <MenuItem Header="_File">
+                <MenuItem Click="NewWindow_OnClick" Header="_New Window" />
+                <Separator />
+                <MenuItem Click="Exit_OnClick" Header="E_xit" />
+            </MenuItem>
+            <MenuItem Header="_Chat">
+                <MenuItem Click="ChangeAlias_OnClick" Header="Change _Alias" />
+                <MenuItem Click="PurgeChatlog_OnClick" Header="_Purge Log" />
+            </MenuItem>
+        </Menu>
+
+        <!--  <TextBlock Margin="0 0 0 2" Text="{Binding ConnectionLabelText, ElementName=Me}" />  -->
 
         <RichTextBox x:Name="RichActivityBox"
                      Grid.Row="1"
+                     Grid.RowSpan="2"
                      Grid.Column="0"
                      Margin="0 0 0 4"
                      Background="#EEEEEE"
+                     IsDocumentEnabled="True"
                      IsReadOnly="True"
                      VerticalScrollBarVisibility="Auto" />
 
-        <Grid Grid.Row="2" Grid.Column="0">
+        <Grid Grid.Row="3" Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -54,17 +73,17 @@
                     VerticalAlignment="Center"
                     Click="SendMessage_OnClick"
                     Content="Send Message"
-                    Padding="8 4" />
+                    Padding="4 2" />
         </Grid>
 
-        <TextBlock Grid.Row="0"
+        <TextBlock Grid.Row="1"
                    Grid.Column="1"
                    Margin="4 0 4 2"
                    VerticalAlignment="Center"
                    Text="Users" />
 
-        <Border Grid.Row="1"
-                Grid.RowSpan="3"
+        <Border Grid.Row="2"
+                Grid.RowSpan="2"
                 Grid.Column="1"
                 Margin="4 0"
                 BorderBrush="Black"
@@ -78,5 +97,69 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Border>
+
+        <Grid x:Name="AliasChangeGrid"
+              Grid.Row="1"
+              Grid.RowSpan="3"
+              Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Margin="-4 -4 -4 -4"
+              Visibility="Collapsed">
+            <Border Background="Black" Opacity="0.5" />
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#DAE1E3"
+                    BorderBrush="Black"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Padding="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Margin="0 0 4 0"
+                               Text="Enter new alias:" />
+
+                    <TextBox x:Name="AliasEntryBox"
+                             Grid.Row="0"
+                             Grid.Column="1"
+                             Width="90"
+                             Margin="0 0 0 4"
+                             MaxLength="15" />
+
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="2"
+                               Margin="0 0 0 4"
+                               Foreground="Red"
+                               Text="Alias must be 1-15 characters"
+                               Visibility="{Binding AliasErrorVisibility, ElementName=Me}" />
+
+                    <StackPanel Grid.Row="2"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+
+                        <Button Margin="0 0 8 0"
+                                Click="AcceptAlias_OnClick"
+                                Content="Accept"
+                                Padding="4 2" />
+                        <Button Click="CancelAlias_OnClick" Content="Cancel" Padding="4 2" />
+
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </Grid>
     </Grid>
 </Window>

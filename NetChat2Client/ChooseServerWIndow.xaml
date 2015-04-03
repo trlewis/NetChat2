@@ -1,37 +1,70 @@
 ﻿<Window x:Class="NetChat2Client.ChooseServerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ChooseServerWIndow" Height="175" Width="250"
-        Background="#DAE1E3"
-        x:Name="Me">
+        x:Name="Me"
+        Title="ChooseServerWIndow"
+        Height="175"
+        Width="250"
+        Background="#DAE1E3">
     <Grid Margin="4">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="4"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="4" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        
-        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                   HorizontalAlignment="Center" Text="Enter Connection Info" Margin="0 2 0 8"/>
-        
-        <TextBlock Grid.Row="1" Grid.Column="0"  Text="Host:" Margin="0 1 0 0" HorizontalAlignment="Right"/>
-        <TextBox Grid.Row="1" Grid.Column="2" Margin="0 0 0 8" Text="{Binding Host, ElementName=Me, Mode=TwoWay}"/>
 
-        <TextBlock Grid.Row="2" Grid.Column="0"  Text="Port:" Margin="0 1 0 0" HorizontalAlignment="Right"/>
-        <TextBox Grid.Row="2" Grid.Column="2" Margin="0 0 0 8" Text="{Binding PortNumber, ElementName=Me, Mode=TwoWay}"/>
+        <TextBlock Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="3"
+                   Margin="0 2 0 8"
+                   HorizontalAlignment="Center"
+                   Text="Enter Connection Info" />
 
-        <TextBlock Grid.Row="3" Grid.Column="0"  Text="Alias:" Margin="0 1 0 0" HorizontalAlignment="Right"/>
-        <TextBox Grid.Row="3" Grid.Column="2" Margin="0 0 0 8" Text="{Binding Alias, ElementName=Me, Mode=TwoWay}"/>
-        
-        <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" Content="Enter Chat"
-                Padding="4 2" Click="EnterChat_Click"/>
+        <TextBlock Grid.Row="1"
+                   Grid.Column="0"
+                   Margin="0 1 0 0"
+                   HorizontalAlignment="Right"
+                   Text="Host:" />
+        <TextBox Grid.Row="1"
+                 Grid.Column="2"
+                 Margin="0 0 0 8"
+                 Text="{Binding Host, ElementName=Me, Mode=TwoWay}" />
+
+        <TextBlock Grid.Row="2"
+                   Grid.Column="0"
+                   Margin="0 1 0 0"
+                   HorizontalAlignment="Right"
+                   Text="Port:" />
+        <TextBox Grid.Row="2"
+                 Grid.Column="2"
+                 Margin="0 0 0 8"
+                 Text="{Binding PortNumber, ElementName=Me, Mode=TwoWay}" />
+
+        <TextBlock Grid.Row="3"
+                   Grid.Column="0"
+                   Margin="0 1 0 0"
+                   HorizontalAlignment="Right"
+                   Text="Alias:" />
+        <TextBox Grid.Row="3"
+                 Grid.Column="2"
+                 Margin="0 0 0 8"
+                 MaxLength="15"
+                 Text="{Binding Alias, ElementName=Me, Mode=TwoWay}" />
+
+        <Button Grid.Row="5"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                HorizontalAlignment="Center"
+                Click="EnterChat_Click"
+                Content="Enter Chat"
+                Padding="4 2" />
     </Grid>
 </Window>

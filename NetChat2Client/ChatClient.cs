@@ -79,7 +79,6 @@ namespace NetChat2Client
 
         public bool ChangeAlias(string alias)
         {
-            //this method currently isn't used, user must reopen program to change alias
             if (string.IsNullOrWhiteSpace(alias) || alias == this.Alias)
             {
                 return false;
@@ -89,6 +88,8 @@ namespace NetChat2Client
             this.Alias = alias;
             this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.AliasChanged,
                 new List<string> { oldName, this.Alias });
+
+            this.NotifyPropertyChanged(() => this.Alias);
             return true;
         }
 
