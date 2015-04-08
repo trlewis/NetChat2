@@ -38,7 +38,8 @@ namespace NetChat2Client
 
         #endregion Dependency Properties
 
-        private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu|ru|co)(\/.+)*(\.\w+)?\/?$";
+        //private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu|ru|co)(\/.+)*(\.\w+)?\/?$";
+        private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
 
         private readonly string _host;
         private readonly int _port;
