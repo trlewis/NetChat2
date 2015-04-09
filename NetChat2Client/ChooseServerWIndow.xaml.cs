@@ -1,8 +1,12 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace NetChat2Client
 {
@@ -10,7 +14,21 @@ namespace NetChat2Client
     {
         #region Dependency Properties
 
+        public static readonly DependencyProperty ConnectingStringProperty = DependencyProperty.Register("ConnectingString", typeof(string), typeof(ChooseServerWindow), null);
+        public static readonly DependencyProperty ConnectingStringVisibilityProperty = DependencyProperty.Register("ConnectingStringVisibility", typeof(Visibility), typeof(ChooseServerWindow), null);
         public static readonly DependencyProperty ConnectionErrorStringProperty = DependencyProperty.Register("ConnectionErrorString", typeof(string), typeof(ChooseServerWindow), null);
+
+        public string ConnectingString
+        {
+            get { return (string)this.GetValue(ConnectingStringProperty); }
+            set { this.SetValue(ConnectingStringProperty, value); }
+        }
+
+        public Visibility ConnectingStringVisibility
+        {
+            get { return (Visibility)this.GetValue(ConnectingStringVisibilityProperty); }
+            set { this.SetValue(ConnectingStringVisibilityProperty, value); }
+        }
 
         public string ConnectionErrorString
         {
@@ -23,12 +41,21 @@ namespace NetChat2Client
         //its not perfect, 999.888.777.666 would still be considered valid. but should be good enough for now
         private const string IpAddressRegex = @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
 
+        private int _connectingDots;
+
         public ChooseServerWindow()
         {
             InitializeComponent();
+            this.ConnectingStringVisibility = Visibility.Collapsed;
             this.PortNumberBox.Text = ConfigurationManager.AppSettings["ServerPort"];
             this.AliasBox.Text = SystemHelper.GetCurrentUserName();
             this.HostBox.Focus();
+
+            this.ConnectingString = "Connecting";
+            var timer = new DispatcherTimer();
+            timer.Interval = new TimeSpan(0, 0, 0, 1);
+            timer.Tick += DotsTimer_Tick;
+            timer.Start();
         }
 
         private void CreateChatWindow()
@@ -66,14 +93,52 @@ namespace NetChat2Client
                 return;
             }
 
-            var win = new MainWindow(host, portNum, alias);
-            win.Show();
-            this.Close();
+            //doing this in a thread so the UI stays responsive. can't use Dispatcher.InvokeAsync because
+            //that would still freeze up the UI while trying to connect
+            Action<string, int, string> connectAction = (hostIp, port, aliasStr) =>
+            {
+                var client = new TcpClient();
+                try
+                {
+                    client.Connect(host, portNum);
+                    var chatClient = new ChatClient(client, alias);
+                    Dispatcher.Invoke(() =>
+                    {
+                        var win = new MainWindow(chatClient);
+                        win.Show();
+                        this.Close();
+                    });
+                }
+                catch (Exception)
+                {
+                    this.Dispatcher.Invoke(() => this.ConnectionErrorString = "Could not connect");
+                }
+                finally
+                {
+                    this.Dispatcher.Invoke(() => this.EnterChatButton.IsEnabled = true);
+                    this.Dispatcher.Invoke(() => this.ConnectingStringVisibility = Visibility.Collapsed);
+                }
+            };
+
+            this.EnterChatButton.IsEnabled = false;
+            this.ConnectingStringVisibility = Visibility.Visible;
+            var connectThread = new Thread(() => connectAction(host, portNum, alias));
+            connectThread.Start();
+        }
+
+        private void DotsTimer_Tick(object sender, EventArgs e)
+        {
+            this._connectingDots++;
+            if (this._connectingDots > 3)
+            {
+                this._connectingDots = 0;
+            }
+
+            this.ConnectingString = "Connecting" + (new String('.', this._connectingDots));
         }
 
         private void EnterChat_Click(object sender, RoutedEventArgs e)
         {
-            //this.ConnectionErrorString = "sodfinsdf sf sf sf sdf sdfs dfaesfr ";
             this.CreateChatWindow();
         }
 

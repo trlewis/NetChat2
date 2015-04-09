@@ -14,22 +14,19 @@ namespace NetChat2Client
     public class ChatClient : ObservableObject
     {
         private readonly Mutex _clientListMutex = new Mutex();
-        private readonly string _hostName;
-        private readonly int _portNumber;
+        private readonly TcpClient _clientSocket;
         private readonly Mutex _streamMutex = new Mutex();
         private List<string> _clientList = new List<string>();
-        private TcpClient _clientSocket = new TcpClient();
         private Color _nameColor;
         private NetworkStream _serverStream;
         private bool _stopThreads;
 
-        public ChatClient(string hostName, int portNumber, string alias = null)
+        public ChatClient(TcpClient socket, string alias)
         {
-            this.NameColor = Colors.Black;
-            this._hostName = hostName;
-            this._portNumber = portNumber;
+            this.Alias = alias;
+            this._clientSocket = socket;
             this.IncomingMessages = new ConcurrentQueue<TcpMessage>();
-            this.Alias = alias ?? SystemHelper.GetCurrentUserName();
+            this.NameColor = Colors.Black;
         }
 
         public string Alias { get; private set; }
@@ -154,7 +151,6 @@ namespace NetChat2Client
 
         public void Start()
         {
-            this._clientSocket.Connect(this._hostName, this._portNumber);
             this._serverStream = this._clientSocket.GetStream();
 
             //start threads
@@ -219,7 +215,7 @@ namespace NetChat2Client
                         this.MessageReceived(message);
                     }
                 }
-                catch (JsonReaderException e)
+                catch (JsonReaderException)
                 {
                     var errorMsg = new TcpMessage
                                    {

@@ -4,7 +4,7 @@
         x:Name="Me"
         Title="Join Server"
         Height="200"
-        Width="250"
+        Width="240"
         Background="{StaticResource WindowBackgroundBrush}">
     <Grid Margin="4">
         <Grid.ColumnDefinitions>
@@ -49,7 +49,8 @@
                  Grid.Row="2"
                  Grid.Column="2"
                  Margin="0 0 0 8"
-                 GotFocus="TextBox_OnGotFocus" />
+                 GotFocus="TextBox_OnGotFocus"
+                 KeyUp="TextBox_OnKeyUp" />
 
         <TextBlock Grid.Row="3"
                    Grid.Column="0"
@@ -61,15 +62,27 @@
                  Grid.Column="2"
                  Margin="0 0 0 8"
                  GotFocus="TextBox_OnGotFocus"
+                 KeyUp="TextBox_OnKeyUp"
                  MaxLength="15" />
 
-        <TextBlock Grid.Row="4" Grid.Column="2" TextWrapping="Wrap" Margin="0 0 0 8"
+        <TextBlock Grid.Row="4"
+                   Grid.Column="2"
+                   Margin="0 0 0 8"
                    VerticalAlignment="Top"
                    Foreground="{StaticResource ErrorBrush}"
                    Text="{Binding ConnectionErrorString, ElementName=Me}"
-                   Visibility="{Binding ConnectionErrorString, ElementName=Me, Converter={StaticResource String2Visibility}, FallbackValue=Collapsed, TargetNullValue=Collapsed}"/>
+                   TextWrapping="Wrap"
+                   Visibility="{Binding ConnectionErrorString, ElementName=Me, Converter={StaticResource String2Visibility}, FallbackValue=Collapsed, TargetNullValue=Collapsed}" />
 
-        <Button Grid.Row="5"
+        <TextBlock Grid.Row="4"
+                   Grid.Column="2"
+                   Margin="0 0 0 8"
+                   VerticalAlignment="Top"
+                   Text="{Binding ConnectingString, ElementName=Me}"
+                   Visibility="{Binding ConnectingStringVisibility, ElementName=Me, TargetNullValue=Collapsed, FallbackValue=Collapsed}" />
+
+        <Button x:Name="EnterChatButton"
+                Grid.Row="5"
                 Grid.Column="0"
                 Grid.ColumnSpan="3"
                 HorizontalAlignment="Center"

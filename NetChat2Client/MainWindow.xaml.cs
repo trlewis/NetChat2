@@ -41,16 +41,13 @@ namespace NetChat2Client
         //private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu|ru|co)(\/.+)*(\.\w+)?\/?$";
         private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
 
-        private readonly string _host;
-        private readonly int _port;
         private DispatcherTimer _timer;
 
-        public MainWindow(string host, int port, string alias)
+        public MainWindow(ChatClient connection)
         {
-            InitializeComponent();
-            this._host = host;
-            this._port = port;
-            this.Load(alias);
+            this.InitializeComponent();
+            this.ChatClient = connection;
+            this.Load();
         }
 
         private void AcceptAlias_OnClick(object sender, RoutedEventArgs e)
@@ -233,12 +230,10 @@ namespace NetChat2Client
             this.ChatClient.SendHeartbeat();
         }
 
-        private void Load(string alias)
+        private void Load()
         {
             this.TaskbarItemInfo = new TaskbarItemInfo { ProgressValue = 1 };
             this.Activated += MainWindow_Activated;
-
-            this.ChatClient = new ChatClient(this._host, this._port, alias);
 
             this.ChatClient.PropertyChanged += ChatClient_PropertyChanged;
 
