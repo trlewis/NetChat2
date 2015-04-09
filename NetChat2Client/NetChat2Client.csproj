@@ -64,15 +64,28 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ChooseServerWIndow.xaml.cs">
-      <DependentUpon>ChooseServerWIndow.xaml</DependentUpon>
+    <Compile Include="ChooseServerWindow.xaml.cs">
+      <DependentUpon>ChooseServerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ColorPickerWindow.xaml.cs">
       <DependentUpon>ColorPickerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Converters\Int2String.cs" />
+    <Compile Include="Code\Converters\Int2String.cs" />
+    <Compile Include="Code\Converters\String2Visibility.cs" />
     <Compile Include="SystemHelper.cs" />
-    <Page Include="ChooseServerWIndow.xaml">
+    <Page Include="Assets\Colors.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Assets\Converters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Assets\Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChooseServerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,0 +1,12 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--  Region: Colors  -->
+    <Color x:Key="ErrorColor">#D12B15</Color>
+    <Color x:Key="WindowBackgroundColor">#DAE1E3</Color>
+    <!--  EndRegion: Colors  -->
+
+    <!--  Region: SolidColorBrushes  -->
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}" />
+    <!--  EndRegion: SolidColorBrushes  -->
+
+</ResourceDictionary>

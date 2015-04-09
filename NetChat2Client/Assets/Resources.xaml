@@ -1,0 +1,6 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:converters="clr-namespace:NetChat2Client.Code.Converters">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/NetChat2Client;component/Assets/Colors.xaml" />
+        <ResourceDictionary Source="/NetChat2Client;component/Assets/Converters.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>
