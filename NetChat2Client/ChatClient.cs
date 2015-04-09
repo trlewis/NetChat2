@@ -109,6 +109,8 @@ namespace NetChat2Client
 
         public void SendMessage(TcpMessage msg, bool async = true)
         {
+            msg.Color = this.NameColor;
+
             Action send = () =>
             {
                 var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);

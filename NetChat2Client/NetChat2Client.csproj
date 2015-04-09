@@ -67,6 +67,7 @@
     <Compile Include="ChooseServerWindow.xaml.cs">
       <DependentUpon>ChooseServerWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Code\Extensions\ComparableExtensions.cs" />
     <Compile Include="ColorPickerWindow.xaml.cs">
       <DependentUpon>ColorPickerWindow.xaml</DependentUpon>
     </Compile>

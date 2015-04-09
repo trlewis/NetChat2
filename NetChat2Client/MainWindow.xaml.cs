@@ -65,20 +65,20 @@ namespace NetChat2Client
             }
         }
 
-        private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //var red = this.ChatClient.NameColor.R;
-            //var green = this.ChatClient.NameColor.G;
-            //var blue = this.ChatClient.NameColor.B;
-            //System.Drawing.Color inColor = System.Drawing.Color.FromArgb(red, green, blue);
-            //var dialog = new System.Windows.Forms.ColorDialog { AllowFullOpen = false, Color = inColor, AnyColor = true };
+        //private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        //{
+        //    var win = new ColorPickerWindow(this.ChatClient.NameColor);
+        //    win.Closed += (sender2, e2) =>
+        //    {
+        //        if (win.ColorConfirmed != true)
+        //        {
+        //            return;
+        //        }
+        //        this.ChatClient.NameColor = win.Color;
+        //    };
 
-            //if(dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            //{
-            //    var newColor = System.Windows.Media.Color.FromArgb(255, (byte)dialog.Color.R, (byte)dialog.Color.G, (byte)dialog.Color.B);
-            //    this.ChatClient.NameColor = newColor;
-            //}
-        }
+        //    win.Show();
+        //}
 
         private void BlinkWindow()
         {
@@ -117,6 +117,21 @@ namespace NetChat2Client
             this.AliasChangeGrid.Visibility = Visibility.Visible;
         }
 
+        private void ChangeColor_OnClick(object sender, RoutedEventArgs e)
+        {
+            var win = new ColorPickerWindow(this.ChatClient.NameColor);
+            win.Closed += (sender2, e2) =>
+            {
+                if (win.ColorConfirmed != true)
+                {
+                    return;
+                }
+                this.ChatClient.NameColor = win.Color;
+            };
+
+            win.Show();
+        }
+
         private void ChatClient_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "IncomingMessages")
@@ -149,7 +164,7 @@ namespace NetChat2Client
             var timeStamp = msg.SentTime.ToString("HH:mm:ss");
 
             var timeRun = new Run(string.Format("[{0}]", timeStamp)) { FontWeight = FontWeights.Bold };
-            var nameRun = new Run(string.Format(" {0}: ", msg.Contents[0])) { FontWeight = FontWeights.Bold };
+            var nameRun = new Run(string.Format(" {0}: ", msg.Contents[0])) { FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(msg.Color) };
 
             var text = msg.Contents[1];
             var toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));

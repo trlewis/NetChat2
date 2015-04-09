@@ -1,44 +1,117 @@
 ﻿<Window x:Class="NetChat2Client.ColorPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ColorPickerWindow" Height="200" Width="300"
-        ResizeMode="NoResize"
+        x:Name="Me"
+        Title="Choose Color"
+        Height="160"
+        Width="300"
         Background="#DAE1E3"
-        x:Name="Me">
-    
+        ResizeMode="NoResize">
+
     <Grid Margin="4">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        
+
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="R:" Margin="0 0 4 16"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
-            <Slider Grid.Row="0" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="G:" Margin="0 0 4 16"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
-            <Slider Grid.Row="1" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
+            <TextBlock Grid.Row="0"
+                       Grid.Column="0"
+                       Margin="0 0 4 8"
+                       Text="R:" />
+            <TextBox Grid.Row="0"
+                     Grid.Column="1"
+                     Width="40"
+                     Margin="0 0 4 0"
+                     VerticalAlignment="Top"
+                     Text="{Binding Red, ElementName=Me, Mode=TwoWay}"
+                     TextChanged="ColorValueText_OnTextChanged" />
+            <Slider Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="0 0 4 0"
+                    IsSnapToTickEnabled="True"
+                    IsTabStop="False"
+                    Maximum="255"
+                    Minimum="0"
+                    ValueChanged="ColorComponent_OnValueChanged"
+                    Value="{Binding Red, ElementName=Me, Mode=TwoWay}" />
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="B:" Margin="0 0 4 16"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Width="40" VerticalAlignment="Top" Margin="0 0 4 0"/>
-            <Slider Grid.Row="2" Grid.Column="2" Margin="0 0 4 0" Minimum="0" Maximum="255" IsSnapToTickEnabled="True"/>
+            <TextBlock Grid.Row="1"
+                       Grid.Column="0"
+                       Margin="0 0 4 8"
+                       Text="G:" />
+            <TextBox Grid.Row="1"
+                     Grid.Column="1"
+                     Width="40"
+                     Margin="0 0 4 0"
+                     VerticalAlignment="Top"
+                     Text="{Binding Green, ElementName=Me, Mode=TwoWay}" />
+            <Slider Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="0 0 4 0"
+                    IsSnapToTickEnabled="True"
+                    IsTabStop="False"
+                    Maximum="255"
+                    Minimum="0"
+                    ValueChanged="ColorComponent_OnValueChanged"
+                    Value="{Binding Green, ElementName=Me, Mode=TwoWay}" />
+
+            <TextBlock Grid.Row="2"
+                       Grid.Column="0"
+                       Margin="0 0 4 8"
+                       Text="B:" />
+            <TextBox Grid.Row="2"
+                     Grid.Column="1"
+                     Width="40"
+                     Margin="0 0 4 0"
+                     VerticalAlignment="Top"
+                     Text="{Binding Blue, ElementName=Me, Mode=TwoWay}" />
+            <Slider Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="0 0 4 0"
+                    IsSnapToTickEnabled="True"
+                    IsTabStop="False"
+                    Maximum="255"
+                    Minimum="0"
+                    ValueChanged="ColorComponent_OnValueChanged"
+                    Value="{Binding Blue, ElementName=Me, Mode=TwoWay}" />
+
+            <Border Grid.Row="3"
+                    Grid.Column="1"
+                    Height="40"
+                    Width="40"
+                    HorizontalAlignment="Left"
+                    Background="{Binding CustomColorBrush, ElementName=Me}"
+                    BorderBrush="Black"
+                    BorderThickness="1" />
+
+            <StackPanel Grid.Row="3"
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
+                <Button Margin="0 0 8 0"
+                        Click="Cancel_OnClick"
+                        Content="Cancel"
+                        Padding="4 2" />
+                <Button Click="Accept_OnClick" Content="Accept" Padding="4 2" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

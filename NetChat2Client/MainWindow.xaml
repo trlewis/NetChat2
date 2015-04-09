@@ -31,6 +31,7 @@
             <MenuItem Header="_Chat">
                 <MenuItem Click="ChangeAlias_OnClick" Header="Change _Alias" />
                 <MenuItem Click="PurgeChatlog_OnClick" Header="_Purge Log" />
+                <MenuItem Header="Change _Color" Click="ChangeColor_OnClick"/>
             </MenuItem>
         </Menu>
 
@@ -54,10 +55,8 @@
             <TextBlock Grid.Column="0"
                        Margin="0 0 2 0"
                        VerticalAlignment="Center"
-                       Cursor="Hand"
                        FontWeight="Bold"
                        Foreground="{Binding ChatClient.NameBrush, ElementName=Me}"
-                       MouseLeftButtonUp="Alias_MouseLeftButtonUp"
                        Text="{Binding ChatClient.Alias, ElementName=Me, FallbackValue=name}" />
 
             <TextBox x:Name="EntryBox"
