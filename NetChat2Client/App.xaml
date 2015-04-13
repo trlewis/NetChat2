@@ -1,7 +1,7 @@
 ﻿<Application x:Class="NetChat2Client.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="ChooseServerWindow.xaml">
+             StartupUri="Windows/ChooseServerWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

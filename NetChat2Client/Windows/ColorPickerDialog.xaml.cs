@@ -3,19 +3,16 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using NetChat2Client.Code.Extensions;
 
-namespace NetChat2Client
+namespace NetChat2Client.Windows
 {
-    /// <summary>
-    /// Interaction logic for ColorPickerWindow.xaml
-    /// </summary>
-    public partial class ColorPickerWindow : Window
+    public partial class ColorPickerDialog
     {
         #region Dependency Properties
 
-        public static readonly DependencyProperty BlueProperty = DependencyProperty.Register("Blue", typeof(int), typeof(ColorPickerWindow));
-        public static readonly DependencyProperty CustomColorBrushProperty = DependencyProperty.Register("CustomColorBrush", typeof(SolidColorBrush), typeof(ColorPickerWindow), null);
-        public static readonly DependencyProperty GreenProperty = DependencyProperty.Register("Green", typeof(int), typeof(ColorPickerWindow));
-        public static readonly DependencyProperty RedProperty = DependencyProperty.Register("Red", typeof(int), typeof(ColorPickerWindow));
+        public static readonly DependencyProperty BlueProperty = DependencyProperty.Register("Blue", typeof(int), typeof(ColorPickerDialog));
+        public static readonly DependencyProperty CustomColorBrushProperty = DependencyProperty.Register("CustomColorBrush", typeof(SolidColorBrush), typeof(ColorPickerDialog), null);
+        public static readonly DependencyProperty GreenProperty = DependencyProperty.Register("Green", typeof(int), typeof(ColorPickerDialog));
+        public static readonly DependencyProperty RedProperty = DependencyProperty.Register("Red", typeof(int), typeof(ColorPickerDialog));
 
         public int Blue
         {
@@ -43,12 +40,12 @@ namespace NetChat2Client
 
         #endregion Dependency Properties
 
-        public ColorPickerWindow()
+        public ColorPickerDialog()
         {
             this.InitializeComponent();
         }
 
-        public ColorPickerWindow(Color inColor)
+        public ColorPickerDialog(Color inColor)
         {
             this.InitializeComponent();
             this.Red = inColor.R;
@@ -56,22 +53,16 @@ namespace NetChat2Client
             this.Blue = inColor.B;
         }
 
-        public Color Color { get; set; }
-
-        public bool? ColorConfirmed { get; set; }
+        public Color Color { get; private set; }
 
         private void Accept_OnClick(object sender, RoutedEventArgs e)
         {
-            //this.DialogResult = true;
-            this.ColorConfirmed = true;
-            this.Close();
+            this.DialogResult = true;
         }
 
         private void Cancel_OnClick(object sender, RoutedEventArgs e)
         {
-            this.ColorConfirmed = false;
-            this.Close();
-            //this.DialogResult = false;
+            this.DialogResult = true;
         }
 
         private void ColorComponent_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -7,8 +8,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using NetChat2Client.Code;
 
-namespace NetChat2Client
+namespace NetChat2Client.Windows
 {
     public partial class ChooseServerWindow
     {
@@ -67,6 +69,13 @@ namespace NetChat2Client
             if (!Regex.IsMatch(host, IpAddressRegex))
             {
                 this.ConnectionErrorString = "Invalid IP format";
+                return;
+            }
+
+            var sections = host.Split('.').Select(int.Parse).ToList();
+            if (sections.Any(s => s < 0 || s > 255))
+            {
+                this.ConnectionErrorString = "IP values must be betwen 0-255";
                 return;
             }
 

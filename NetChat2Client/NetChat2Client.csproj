@@ -64,16 +64,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ChooseServerWindow.xaml.cs">
+    <Compile Include="Windows\ChangeAliasDialog.xaml.cs">
+      <DependentUpon>ChangeAliasDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\ChooseServerWindow.xaml.cs">
       <DependentUpon>ChooseServerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Code\Extensions\ComparableExtensions.cs" />
-    <Compile Include="ColorPickerWindow.xaml.cs">
-      <DependentUpon>ColorPickerWindow.xaml</DependentUpon>
+    <Compile Include="Windows\ColorPickerDialog.xaml.cs">
+      <DependentUpon>ColorPickerDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Code\Converters\Int2String.cs" />
     <Compile Include="Code\Converters\String2Visibility.cs" />
-    <Compile Include="SystemHelper.cs" />
+    <Compile Include="Code\SystemHelper.cs" />
     <Page Include="Assets\Colors.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -86,15 +89,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ChooseServerWindow.xaml">
+    <Page Include="Windows\ChangeAliasDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ColorPickerWindow.xaml">
+    <Page Include="Windows\ChooseServerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\ColorPickerDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -103,7 +110,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ChatClient.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>

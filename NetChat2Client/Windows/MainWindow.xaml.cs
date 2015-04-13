@@ -12,11 +12,8 @@ using System.Windows.Shell;
 using System.Windows.Threading;
 using NetChat2Server;
 
-namespace NetChat2Client
+namespace NetChat2Client.Windows
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow
     {
         #region Dependency Properties
@@ -38,7 +35,6 @@ namespace NetChat2Client
 
         #endregion Dependency Properties
 
-        //private const string UrlRegex = @"^https?:\/\/(\w+\.)*(com|net|org|gov|edu|ru|co)(\/.+)*(\.\w+)?\/?$";
         private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
 
         private DispatcherTimer _timer;
@@ -49,36 +45,6 @@ namespace NetChat2Client
             this.ChatClient = connection;
             this.Load();
         }
-
-        private void AcceptAlias_OnClick(object sender, RoutedEventArgs e)
-        {
-            var newAlias = this.AliasEntryBox.Text;
-            if (newAlias.Length <= 0 || newAlias.Length > 15)
-            {
-                this.AliasErrorVisibility = Visibility.Visible;
-                return;
-            }
-
-            if (this.ChatClient.ChangeAlias(newAlias))
-            {
-                this.AliasChangeGrid.Visibility = Visibility.Collapsed;
-            }
-        }
-
-        //private void Alias_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        //{
-        //    var win = new ColorPickerWindow(this.ChatClient.NameColor);
-        //    win.Closed += (sender2, e2) =>
-        //    {
-        //        if (win.ColorConfirmed != true)
-        //        {
-        //            return;
-        //        }
-        //        this.ChatClient.NameColor = win.Color;
-        //    };
-
-        //    win.Show();
-        //}
 
         private void BlinkWindow()
         {
@@ -105,31 +71,32 @@ namespace NetChat2Client
             blink.Start();
         }
 
-        private void CancelAlias_OnClick(object sender, RoutedEventArgs e)
-        {
-            this.AliasChangeGrid.Visibility = Visibility.Collapsed;
-        }
-
         private void ChangeAlias_OnClick(object sender, RoutedEventArgs e)
         {
-            this.AliasEntryBox.Text = this.ChatClient.Alias;
-            this.AliasErrorVisibility = Visibility.Collapsed;
-            this.AliasChangeGrid.Visibility = Visibility.Visible;
+            var win = new ChangeAliasDialog(this.ChatClient.Alias);
+            win.Closed += (sender2, e2) =>
+            {
+                if (win.DialogResult == true)
+                {
+                    this.ChatClient.ChangeAlias(win.Alias);
+                }
+            };
+            win.ShowDialog();
         }
 
         private void ChangeColor_OnClick(object sender, RoutedEventArgs e)
         {
-            var win = new ColorPickerWindow(this.ChatClient.NameColor);
+            var win = new ColorPickerDialog(this.ChatClient.NameColor);
             win.Closed += (sender2, e2) =>
             {
-                if (win.ColorConfirmed != true)
+                if (win.DialogResult != true)
                 {
                     return;
                 }
                 this.ChatClient.NameColor = win.Color;
             };
 
-            win.Show();
+            win.ShowDialog();
         }
 
         private void ChatClient_PropertyChanged(object sender, PropertyChangedEventArgs e)

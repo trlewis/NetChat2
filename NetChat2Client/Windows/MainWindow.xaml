@@ -1,4 +1,4 @@
-﻿<Window x:Class="NetChat2Client.MainWindow"
+﻿<Window x:Class="NetChat2Client.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Name="Me"
@@ -95,68 +95,5 @@
             </ItemsControl>
         </Border>
 
-        <Grid x:Name="AliasChangeGrid"
-              Grid.Row="1"
-              Grid.RowSpan="3"
-              Grid.Column="0"
-              Grid.ColumnSpan="2"
-              Margin="-4 -4 -4 -4"
-              Visibility="Collapsed">
-            <Border Background="Black" Opacity="0.5" />
-            <Border HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Background="#DAE1E3"
-                    BorderBrush="Black"
-                    BorderThickness="2"
-                    CornerRadius="8"
-                    Padding="8">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Margin="0 0 4 0"
-                               Text="Enter new alias:" />
-
-                    <TextBox x:Name="AliasEntryBox"
-                             Grid.Row="0"
-                             Grid.Column="1"
-                             Width="90"
-                             Margin="0 0 0 4"
-                             MaxLength="15" />
-
-                    <TextBlock Grid.Row="1"
-                               Grid.Column="0"
-                               Grid.ColumnSpan="2"
-                               Margin="0 0 0 4"
-                               Foreground="Red"
-                               Text="Alias must be 1-15 characters"
-                               Visibility="{Binding AliasErrorVisibility, ElementName=Me}" />
-
-                    <StackPanel Grid.Row="2"
-                                Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                HorizontalAlignment="Right"
-                                Orientation="Horizontal">
-
-                        <Button Margin="0 0 8 0"
-                                Click="AcceptAlias_OnClick"
-                                Content="Accept"
-                                Padding="4 2" />
-                        <Button Click="CancelAlias_OnClick" Content="Cancel" Padding="4 2" />
-
-                    </StackPanel>
-
-                </Grid>
-
-            </Border>
-        </Grid>
     </Grid>
 </Window>

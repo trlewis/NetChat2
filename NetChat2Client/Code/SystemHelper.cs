@@ -1,4 +1,4 @@
-﻿namespace NetChat2Client
+﻿namespace NetChat2Client.Code
 {
     public static class SystemHelper
     {
