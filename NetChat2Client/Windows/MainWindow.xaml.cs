@@ -43,6 +43,7 @@ namespace NetChat2Client.Windows
         {
             this.InitializeComponent();
             this.ChatClient = connection;
+            this.EntryBox.Focus();
             this.Load();
         }
 
@@ -199,6 +200,38 @@ namespace NetChat2Client.Windows
             if (e.Key == Key.Enter || e.Key == Key.Return)
             {
                 this.SendUserMessage();
+                return;
+            }
+
+            if (this.ChatClient == null)
+            {
+                return;
+            }
+
+            if (this.EntryBox.Text.Length <= 0 && this.ChatClient.IsTyping)
+            {
+                var tcpm = new TcpMessage
+                {
+                    SentTime = DateTime.Now,
+                    MessageType = TcpMessageType.SilentData | TcpMessageType.UserTyping,
+                    Contents = new List<string> { this.ChatClient.Alias },
+                    IsTyping = false
+                };
+                this.ChatClient.IsTyping = false;
+                this.ChatClient.SendMessage(tcpm);
+            }
+
+            if (this.EntryBox.Text.Length > 0 && !this.ChatClient.IsTyping)
+            {
+                var tcpm = new TcpMessage
+                {
+                    SentTime = DateTime.Now,
+                    MessageType = TcpMessageType.SilentData | TcpMessageType.UserTyping,
+                    Contents = new List<string> { this.ChatClient.Alias },
+                    IsTyping = true
+                };
+                this.ChatClient.IsTyping = true;
+                this.ChatClient.SendMessage(tcpm);
             }
         }
 
@@ -343,10 +376,12 @@ namespace NetChat2Client.Windows
             var tcpm = new TcpMessage
                        {
                            SentTime = DateTime.Now,
-                           MessageType = TcpMessageType.Message,
-                           Contents = new List<string> { this.ChatClient.Alias, boxString }
+                           MessageType = TcpMessageType.Message | TcpMessageType.UserTyping,
+                           Contents = new List<string> { this.ChatClient.Alias, boxString },
+                           IsTyping = false
                        };
 
+            this.ChatClient.IsTyping = false;
             this.ChatClient.SendMessage(tcpm);
 
             this.EntryBox.Clear();

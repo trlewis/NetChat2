@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -16,10 +17,9 @@ namespace NetChat2Client
         private readonly Mutex _clientListMutex = new Mutex();
         private readonly TcpClient _clientSocket;
         private readonly Mutex _streamMutex = new Mutex();
-        private List<string> _clientList = new List<string>();
+        private List<UserListItem> _clientList = new List<UserListItem>();
         private Color _nameColor;
         private NetworkStream _serverStream;
-        private bool _stopThreads;
 
         public ChatClient(TcpClient socket, string alias)
         {
@@ -27,11 +27,12 @@ namespace NetChat2Client
             this._clientSocket = socket;
             this.IncomingMessages = new ConcurrentQueue<TcpMessage>();
             this.NameColor = Colors.Black;
+            this.IsTyping = false;
         }
 
         public string Alias { get; private set; }
 
-        public IList<string> ClientList
+        public IList<UserListItem> ClientList
         {
             get
             {
@@ -40,7 +41,7 @@ namespace NetChat2Client
                     return null;
                 }
 
-                var returnList = new List<string>(this._clientList);
+                var returnList = new List<UserListItem>(this._clientList);
                 this._clientListMutex.ReleaseMutex();
                 return returnList;
             }
@@ -50,6 +51,10 @@ namespace NetChat2Client
         /// This is what whatever uses this class will use to do whatever they need to do when a message comes in
         /// </summary>
         public ConcurrentQueue<TcpMessage> IncomingMessages { get; private set; }
+
+        public bool IsRunning { get; private set; }
+
+        public bool IsTyping { get; set; }
 
         public SolidColorBrush NameBrush
         {
@@ -109,6 +114,11 @@ namespace NetChat2Client
 
         public void SendMessage(TcpMessage msg, bool async = true)
         {
+            if (!this.IsRunning)
+            {
+                return;
+            }
+
             msg.Color = this.NameColor;
 
             Action send = () =>
@@ -130,6 +140,17 @@ namespace NetChat2Client
                 catch (ObjectDisposedException)
                 {
                 }
+                catch (IOException)
+                {
+                    var lostMessage = new TcpMessage
+                                      {
+                                          SentTime = DateTime.Now,
+                                          Contents = new List<string> { "Server connection lost" },
+                                          MessageType = TcpMessageType.ErrorMessage
+                                      };
+                    this.MessageReceived(lostMessage);
+                    this.IsRunning = false;
+                }
                 finally
                 {
                     this._streamMutex.ReleaseMutex();
@@ -147,13 +168,17 @@ namespace NetChat2Client
 
         public void ShutDown()
         {
-            this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.ClientLeft, new List<string> { this.Alias }, false);
-            this._stopThreads = true;
+            if (this.IsRunning)
+            {
+                this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.ClientLeft, new List<string> { this.Alias }, false);
+                this.IsRunning = false;
+            }
         }
 
         public void Start()
         {
             this._serverStream = this._clientSocket.GetStream();
+            this.IsRunning = true;
 
             //start threads
             var listener = new Thread(this.ListenForIncomingMessages);
@@ -176,13 +201,9 @@ namespace NetChat2Client
 
         private void ListenForIncomingMessages()
         {
-            while (true)
+            while (this.IsRunning)
             {
                 Thread.Sleep(2);
-                if (this._stopThreads)
-                {
-                    break;
-                }
 
                 if (!this._streamMutex.WaitOne(100))
                 {
@@ -232,6 +253,44 @@ namespace NetChat2Client
 
         private void MessageReceived(TcpMessage msg)
         {
+            if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
+            {
+                var toChange = this._clientList.SingleOrDefault(c => c.Alias == msg.Contents[0]);
+                if (toChange != null)
+                {
+                    toChange.Alias = msg.Contents[1];
+                }
+
+                this.NotifyPropertyChanged(() => this.ClientList);
+            }
+
+            //change color of user in list
+            if (msg.MessageType.HasFlag(TcpMessageType.Message) || msg.MessageType.HasFlag(TcpMessageType.UserTyping))
+            {
+                var client = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                if (client != null)
+                {
+                    client.Color = msg.Color;
+                }
+            }
+
+            if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
+            {
+                this._clientList.Add(new UserListItem(msg.Contents[0]));
+                this.NotifyPropertyChanged(() => this.ClientList);
+            }
+
+            if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) || msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
+            {
+                var toRemove = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                if (toRemove != null)
+                {
+                    this._clientList.Remove(toRemove);
+                }
+
+                this.NotifyPropertyChanged(() => this.ClientList);
+            }
+
             if (!msg.MessageType.HasFlag(TcpMessageType.SilentData))
             {
                 this.IncomingMessages.Enqueue(msg);
@@ -241,38 +300,24 @@ namespace NetChat2Client
 
             if (msg.MessageType.HasFlag(TcpMessageType.UserList))
             {
-                var list = new List<string>(msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n))).ToList();
-                if (!list.Contains(this.Alias))
+                var validNames = msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
+                var list = new List<UserListItem>(validNames.Select(n => new UserListItem(n)));
+                if (list.All(u => u.Alias != this.Alias))
                 {
-                    list.Add(this.Alias);
+                    var me = new UserListItem(this.Alias) { Color = this.NameColor };
+                    list.Add(me);
                 }
                 this._clientList = list;
                 this.NotifyPropertyChanged(() => this.ClientList);
             }
 
-            if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ||
-                msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
+            if (msg.MessageType.HasFlag(TcpMessageType.UserTyping))
             {
-                if (this._clientList.Contains(msg.Contents[0]))
+                var user = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                if (user != null)
                 {
-                    this._clientList.Remove(msg.Contents[0]);
+                    user.IsTyping = msg.IsTyping == true;
                 }
-                this.NotifyPropertyChanged(() => this.ClientList);
-            }
-
-            if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
-            {
-                this._clientList.Add(msg.Contents[0]);
-                this.NotifyPropertyChanged(() => this.ClientList);
-            }
-            if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
-            {
-                if (this._clientList.Contains(msg.Contents[0]))
-                {
-                    this._clientList.Remove(msg.Contents[0]);
-                }
-                this._clientList.Add(msg.Contents[1]);
-                this.NotifyPropertyChanged(() => this.ClientList);
             }
         }
     }

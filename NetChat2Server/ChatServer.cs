@@ -38,6 +38,7 @@ namespace NetChat2Server
                 {
                     return;
                 }
+                var printStr = string.Empty;
 
                 if (!this._clientListMutex.WaitOne(250))
                 {
@@ -58,11 +59,22 @@ namespace NetChat2Server
                 {
                     connection.IsConnected = false;
                     var leftType = msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ? "left" : "dropped";
-                    Console.WriteLine(">> [{0}] Client No: {1} {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, leftType);
+                    printStr = string.Format(">> [{0}] Client No: {1} {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, leftType);
                     this._clientConnections.Remove(connection);
                 }
 
+                if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
+                {
+                    printStr = string.Format(">> [{0}] ({1}) is now ({2})", DateTime.Now, msg.Contents[0],
+                        msg.Contents[1]);
+                }
+
                 this._clientListMutex.ReleaseMutex();
+
+                if (!string.IsNullOrWhiteSpace(printStr))
+                {
+                    Console.WriteLine(printStr);
+                }
             };
 
             var thread = new Thread(() => handleMessageThread(clientConnection, message));

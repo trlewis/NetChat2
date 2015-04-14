@@ -10,6 +10,11 @@ namespace NetChat2Server
 
         public IList<string> Contents { get; set; }
 
+        /// <summary>
+        /// meant to be used in conjunction with the UserTyping TcpMessageType
+        /// </summary>
+        public bool? IsTyping { get; set; }
+
         public TcpMessageType MessageType { get; set; }
 
         public DateTime SentTime { get; set; }

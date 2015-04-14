@@ -64,6 +64,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Code\Converters\Bool2FontWeight.cs" />
+    <Compile Include="UserListItem.cs" />
     <Compile Include="Windows\ChangeAliasDialog.xaml.cs">
       <DependentUpon>ChangeAliasDialog.xaml</DependentUpon>
     </Compile>
