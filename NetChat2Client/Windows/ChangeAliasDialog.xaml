@@ -4,7 +4,7 @@
         x:Name="Me"
         Title="Change Alias"
         Height="94"
-        Width="282"
+        Width="305"
         Background="{StaticResource WindowBackgroundBrush}"
         ResizeMode="NoResize">
     <Grid Margin="4">

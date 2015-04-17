@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Windows.Media;
 using NetChat2Server;
@@ -16,6 +15,7 @@ namespace NetChat2Client
     {
         private readonly Mutex _clientListMutex = new Mutex();
         private readonly TcpClient _clientSocket;
+        private readonly SimpleAes _encryption = new SimpleAes("zA4Hj7Gn40cN48$&^Cs4h&JE3ydf#%@[", "fv3GHkP(*jbnr4J}");
         private readonly Mutex _streamMutex = new Mutex();
         private List<UserListItem> _clientList = new List<UserListItem>();
         private Color _nameColor;
@@ -124,7 +124,7 @@ namespace NetChat2Client
             Action send = () =>
             {
                 var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
-                var outStream = Encoding.UTF8.GetBytes(serialized);
+                var outStream = this._encryption.Encrypt(serialized);
                 if (!this._streamMutex.WaitOne(100))
                 {
                     return;
@@ -215,11 +215,8 @@ namespace NetChat2Client
                 if (this._serverStream.CanRead && this._serverStream.DataAvailable)
                 {
                     var readBuffer = new byte[this._clientSocket.ReceiveBufferSize];
-                    do
-                    {
-                        var bytesRead = this._serverStream.Read(readBuffer, 0, this._clientSocket.ReceiveBufferSize);
-                        messageString += Encoding.UTF8.GetString(readBuffer, 0, bytesRead);
-                    } while (this._serverStream.DataAvailable);
+                    var bytesRead = this._serverStream.Read(readBuffer, 0, this._clientSocket.ReceiveBufferSize);
+                    messageString = this._encryption.Decrypt(readBuffer.Take(bytesRead).ToArray());
                     this._serverStream.Flush();
                 }
 

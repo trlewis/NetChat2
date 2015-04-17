@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 
@@ -12,6 +12,7 @@ namespace NetChat2Server
     public class ClientConnection
     {
         private readonly Mutex _clientStreamMutex;
+        private readonly SimpleAes _encryption = new SimpleAes("zA4Hj7Gn40cN48$&^Cs4h&JE3ydf#%@[", "fv3GHkP(*jbnr4J}");
         private readonly long _lagLimit;
         private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
@@ -37,7 +38,7 @@ namespace NetChat2Server
             Action<TcpMessage> sendThread = msg =>
             {
                 var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
-                var sendBytes = Encoding.UTF8.GetBytes(serialized);
+                var sendBytes = this._encryption.Encrypt(serialized);
 
                 if (!this._clientSocket.Connected)
                 {
@@ -113,12 +114,10 @@ namespace NetChat2Server
 
                     if (this._clientNetworkStream.CanRead && this._clientNetworkStream.DataAvailable)
                     {
-                        do
-                        {
-                            var bytesRead = this._clientNetworkStream.Read(readBuffer, 0,
-                                this._clientSocket.ReceiveBufferSize);
-                            dataFromClient += Encoding.UTF8.GetString(readBuffer, 0, bytesRead);
-                        } while (this._clientNetworkStream.DataAvailable);
+                        var bytesRead = this._clientNetworkStream.Read(readBuffer, 0,
+                            this._clientSocket.ReceiveBufferSize);
+                        dataFromClient = this._encryption.Decrypt(readBuffer.Take(bytesRead).ToArray());
+                        this._clientNetworkStream.Flush();
                     }
 
                     this._clientStreamMutex.ReleaseMutex();

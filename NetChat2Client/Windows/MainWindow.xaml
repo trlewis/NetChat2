@@ -5,7 +5,7 @@
         x:Name="Me"
         Title="NetChat2"
         Height="400"
-        Width="625"
+        Width="650"
         Background="#DAE1E3">
     <Grid Margin="4">
         <Grid.RowDefinitions>
@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="125" />
+            <ColumnDefinition Width="135" />
         </Grid.ColumnDefinitions>
 
         <Menu Grid.Row="0"
@@ -93,7 +93,7 @@
                         <TextBlock Margin="0 1"
                                    FontWeight="{Binding IsTyping, Converter={StaticResource Bool2FontWeight}}"
                                    Foreground="{Binding AliasBrush}"
-                                   Text="{Binding DisplayAlias}" />
+                                   Text="{Binding DisplayAlias}" ToolTipService.ToolTip="{Binding Alias}"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
