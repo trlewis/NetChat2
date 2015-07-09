@@ -52,7 +52,7 @@ namespace NetChat2Client
         /// </summary>
         public ConcurrentQueue<TcpMessage> IncomingMessages { get; private set; }
 
-        public bool IsRunning { get; private set; }
+        private bool IsRunning { get; set; }
 
         public bool IsTyping { get; set; }
 
@@ -69,7 +69,7 @@ namespace NetChat2Client
             get { return this._nameColor; }
             set
             {
-                if (value == null || value == this._nameColor)
+                if (value == this._nameColor)
                 {
                     return;
                 }
@@ -79,11 +79,11 @@ namespace NetChat2Client
             }
         }
 
-        public bool ChangeAlias(string alias)
+        public void ChangeAlias(string alias)
         {
             if (string.IsNullOrWhiteSpace(alias) || alias == this.Alias)
             {
-                return false;
+                return;
             }
 
             var oldName = this.Alias;
@@ -92,16 +92,9 @@ namespace NetChat2Client
                 new List<string> { oldName, this.Alias });
 
             this.NotifyPropertyChanged(() => this.Alias);
-            return true;
         }
 
-        public void SendHeartbeat()
-        {
-            var msg = new TcpMessage { MessageType = TcpMessageType.Heartbeat, SentTime = DateTime.Now };
-            this.SendMessage(msg);
-        }
-
-        public void SendMessage(TcpMessageType type, IList<string> contents, bool async = true)
+        private void SendMessage(TcpMessageType type, IList<string> contents, bool async = true)
         {
             var msg = new TcpMessage
                       {

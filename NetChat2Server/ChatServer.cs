@@ -34,10 +34,6 @@ namespace NetChat2Server
         {
             Action<ClientConnection, TcpMessage> handleMessageThread = (connection, msg) =>
             {
-                if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
-                {
-                    return;
-                }
                 var printStr = string.Empty;
 
                 if (!this._clientListMutex.WaitOne(250))

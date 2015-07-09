@@ -37,8 +37,6 @@ namespace NetChat2Client.Windows
 
         private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
 
-        private DispatcherTimer _timer;
-
         public MainWindow(ChatClient connection)
         {
             this.InitializeComponent();
@@ -240,11 +238,6 @@ namespace NetChat2Client.Windows
             this.Close();
         }
 
-        private void HeartbeatTimer_Tick(object sender, EventArgs e)
-        {
-            this.ChatClient.SendHeartbeat();
-        }
-
         private void Load()
         {
             this.TaskbarItemInfo = new TaskbarItemInfo { ProgressValue = 1 };
@@ -257,11 +250,6 @@ namespace NetChat2Client.Windows
 
             this.ChatClient.Start();
             this.Closed += this.MainWindow_Closed;
-
-            this._timer = new DispatcherTimer();
-            this._timer.Tick += this.HeartbeatTimer_Tick;
-            this._timer.Interval = new TimeSpan(0, 0, 0, 0, 750);
-            this._timer.Start();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -13,18 +12,15 @@ namespace NetChat2Server
     {
         private readonly Mutex _clientStreamMutex;
         private readonly SimpleAes _encryption = new SimpleAes("zA4Hj7Gn40cN48$&^Cs4h&JE3ydf#%@[", "fv3GHkP(*jbnr4J}");
-        private readonly long _lagLimit;
         private readonly ChatServer _server;
         private NetworkStream _clientNetworkStream;
         private TcpClient _clientSocket;
-        private DateTime _lastHeartbeat;
 
         public ClientConnection(ChatServer server)
         {
             this._server = server;
             this.IsConnected = true;
             this._clientStreamMutex = new Mutex();
-            this._lagLimit = int.Parse(ConfigurationManager.AppSettings["ClientTimeout"]);
         }
 
         public string Alias { get; private set; }
@@ -77,8 +73,6 @@ namespace NetChat2Server
 
             var clientThread = new Thread(() => ChatThread(bufferSize));
             clientThread.Start();
-
-            this._lastHeartbeat = DateTime.Now;
         }
 
         private void ChatThread(int bufferSize)
@@ -89,16 +83,9 @@ namespace NetChat2Server
             {
                 Thread.Sleep(2);
 
-                var lagTime = DateTime.Now - this._lastHeartbeat;
-                if (lagTime.TotalMilliseconds >= this._lagLimit)
-                {
-                    this.DropConnection();
-                    break;
-                }
-
                 if (!this._clientSocket.Connected)
                 {
-                    this.IsConnected = false;
+                    this.DropConnection();
                     break;
                 }
 
@@ -156,10 +143,7 @@ namespace NetChat2Server
 
         private void HandleIncomingMessage(TcpMessage msg)
         {
-            if (!msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
-            {
-                this._server.HandleIncomingMessage(this, msg);
-            }
+            this._server.HandleIncomingMessage(this, msg);
 
             if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
             {
@@ -169,11 +153,6 @@ namespace NetChat2Server
             if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
             {
                 this.Alias = msg.Contents[0];
-            }
-
-            if (msg.MessageType.HasFlag(TcpMessageType.Heartbeat))
-            {
-                this._lastHeartbeat = DateTime.Now;
             }
         }
     }
