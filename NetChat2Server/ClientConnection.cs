@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
@@ -33,8 +32,12 @@ namespace NetChat2Server
         {
             Action<TcpMessage> sendThread = msg =>
             {
-                var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
-                var sendBytes = this._encryption.Encrypt(serialized);
+                string serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
+                byte[] messageBytes = this._encryption.Encrypt(serialized);
+                byte[] lengthBytes = BitConverter.GetBytes(messageBytes.Length);
+                var sendBytes = new byte[messageBytes.Length + lengthBytes.Length];
+                Array.Copy(lengthBytes, sendBytes, 4);
+                Array.Copy(messageBytes, 0, sendBytes, lengthBytes.Length, messageBytes.Length);
 
                 if (!this._clientSocket.Connected)
                 {
@@ -69,13 +72,12 @@ namespace NetChat2Server
         {
             this._clientSocket = inSocket;
             this.ClientNum = clientNum;
-            var bufferSize = this._clientSocket.ReceiveBufferSize;
 
-            var clientThread = new Thread(() => ChatThread(bufferSize));
+            var clientThread = new Thread(ChatThread);
             clientThread.Start();
         }
 
-        private void ChatThread(int bufferSize)
+        private void ChatThread()
         {
             this._clientNetworkStream = this._clientSocket.GetStream();
 
@@ -92,7 +94,6 @@ namespace NetChat2Server
                 try
                 {
                     var dataFromClient = string.Empty;
-                    var readBuffer = new byte[bufferSize];
 
                     if (!this._clientStreamMutex.WaitOne(250))
                     {
@@ -101,9 +102,20 @@ namespace NetChat2Server
 
                     if (this._clientNetworkStream.CanRead && this._clientNetworkStream.DataAvailable)
                     {
-                        var bytesRead = this._clientNetworkStream.Read(readBuffer, 0,
-                            this._clientSocket.ReceiveBufferSize);
-                        dataFromClient = this._encryption.Decrypt(readBuffer.Take(bytesRead).ToArray());
+                        var lengthBytes = new byte[4];
+                        this._clientNetworkStream.Read(lengthBytes, 0, 4);
+                        int messageLength = BitConverter.ToInt32(lengthBytes, 0);
+                        var message = new byte[messageLength];
+
+                        int index = 0;
+                        while (index < messageLength)
+                        {
+                            int bytesRead = this._clientNetworkStream.Read(message, index, messageLength - index);
+                            index += bytesRead;
+                        }
+
+                        dataFromClient = this._encryption.Decrypt(message);
+
                         this._clientNetworkStream.Flush();
                     }
 
@@ -152,6 +164,11 @@ namespace NetChat2Server
 
             if (msg.MessageType.HasFlag(TcpMessageType.ClientJoined))
             {
+                if (this.Alias == null)
+                {
+                    Console.WriteLine(">> Client #{0} alias is: {1}", this.ClientNum, msg.Contents[0]);
+                }
+
                 this.Alias = msg.Contents[0];
             }
         }

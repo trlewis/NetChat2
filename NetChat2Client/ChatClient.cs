@@ -86,7 +86,7 @@ namespace NetChat2Client
                 return;
             }
 
-            var oldName = this.Alias;
+            string oldName = this.Alias;
             this.Alias = alias;
             this.SendMessage(TcpMessageType.SystemMessage | TcpMessageType.AliasChanged,
                 new List<string> { oldName, this.Alias });
@@ -116,8 +116,13 @@ namespace NetChat2Client
 
             Action send = () =>
             {
-                var serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
-                var outStream = this._encryption.Encrypt(serialized);
+                string serialized = JsonConvert.SerializeObject(msg, Formatting.Indented);
+                byte[] messageBytes = this._encryption.Encrypt(serialized);
+                byte[] lengthBytes = BitConverter.GetBytes(messageBytes.Length);
+                var sendBytes = new byte[messageBytes.Length + lengthBytes.Length];
+                Array.Copy(lengthBytes, sendBytes, 4);
+                Array.Copy(messageBytes, 0, sendBytes, lengthBytes.Length, messageBytes.Length);
+
                 if (!this._streamMutex.WaitOne(100))
                 {
                     return;
@@ -127,7 +132,7 @@ namespace NetChat2Client
 
                 try
                 {
-                    this._serverStream.Write(outStream, 0, outStream.Length);
+                    this._serverStream.Write(sendBytes, 0, sendBytes.Length);
                     this._serverStream.Flush();
                 }
                 catch (ObjectDisposedException)
@@ -207,9 +212,20 @@ namespace NetChat2Client
 
                 if (this._serverStream.CanRead && this._serverStream.DataAvailable)
                 {
-                    var readBuffer = new byte[this._clientSocket.ReceiveBufferSize];
-                    var bytesRead = this._serverStream.Read(readBuffer, 0, this._clientSocket.ReceiveBufferSize);
-                    messageString = this._encryption.Decrypt(readBuffer.Take(bytesRead).ToArray());
+                    var lengthBytes = new byte[4];
+                    this._serverStream.Read(lengthBytes, 0, 4);
+                    int messageLength = BitConverter.ToInt32(lengthBytes, 0);
+                    var message = new byte[messageLength];
+
+                    int index = 0;
+                    while (index < messageLength)
+                    {
+                        int bytesRead = this._serverStream.Read(message, index, messageLength - index);
+                        index += bytesRead;
+                    }
+
+                    messageString = this._encryption.Decrypt(message);
+
                     this._serverStream.Flush();
                 }
 
@@ -245,7 +261,7 @@ namespace NetChat2Client
         {
             if (msg.MessageType.HasFlag(TcpMessageType.AliasChanged))
             {
-                var toChange = this._clientList.SingleOrDefault(c => c.Alias == msg.Contents[0]);
+                UserListItem toChange = this._clientList.SingleOrDefault(c => c.Alias == msg.Contents[0]);
                 if (toChange != null)
                 {
                     toChange.Alias = msg.Contents[1];
@@ -257,7 +273,7 @@ namespace NetChat2Client
             //change color of user in list
             if (msg.MessageType.HasFlag(TcpMessageType.Message) || msg.MessageType.HasFlag(TcpMessageType.UserTyping))
             {
-                var client = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                UserListItem client = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
                 if (client != null)
                 {
                     client.Color = msg.Color;
@@ -272,7 +288,7 @@ namespace NetChat2Client
 
             if (msg.MessageType.HasFlag(TcpMessageType.ClientLeft) || msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
             {
-                var toRemove = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                UserListItem toRemove = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
                 if (toRemove != null)
                 {
                     this._clientList.Remove(toRemove);
@@ -290,7 +306,7 @@ namespace NetChat2Client
 
             if (msg.MessageType.HasFlag(TcpMessageType.UserList))
             {
-                var validNames = msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
+                IList<string> validNames = msg.Contents.Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
                 var list = new List<UserListItem>(validNames.Select(n => new UserListItem(n)));
                 if (list.All(u => u.Alias != this.Alias))
                 {
@@ -303,7 +319,7 @@ namespace NetChat2Client
 
             if (msg.MessageType.HasFlag(TcpMessageType.UserTyping))
             {
-                var user = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
+                UserListItem user = this._clientList.FirstOrDefault(c => c.Alias == msg.Contents[0]);
                 if (user != null)
                 {
                     user.IsTyping = msg.IsTyping == true;

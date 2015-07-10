@@ -9,7 +9,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shell;
-using System.Windows.Threading;
 using NetChat2Server;
 
 namespace NetChat2Client.Windows
@@ -18,14 +17,7 @@ namespace NetChat2Client.Windows
     {
         #region Dependency Properties
 
-        public static readonly DependencyProperty AliasErrorVisibilityProperty = DependencyProperty.Register("AliasErrorVisibility", typeof(Visibility), typeof(MainWindow), null);
         public static readonly DependencyProperty ChatClientProperty = DependencyProperty.Register("ChatClient", typeof(ChatClient), typeof(MainWindow), null);
-
-        public Visibility AliasErrorVisibility
-        {
-            get { return (Visibility)this.GetValue(AliasErrorVisibilityProperty); }
-            set { this.SetValue(AliasErrorVisibilityProperty, value); }
-        }
 
         public ChatClient ChatClient
         {
@@ -35,7 +27,8 @@ namespace NetChat2Client.Windows
 
         #endregion Dependency Properties
 
-        private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
+        //private const string UrlRegex = @"^https?:\/\/([\w-]+\.)*(\w{2,})(\/[^ ]+)*(\.\w+)?\/?$";
+        private const string UrlRegex = @"^https?:\/\/[^\s]+$"; //keep it simple...
 
         public MainWindow(ChatClient connection)
         {
@@ -108,7 +101,9 @@ namespace NetChat2Client.Windows
                     {
                         TcpMessage msgOut;
                         if (this.ChatClient.IncomingMessages.TryDequeue(out msgOut))
+                        {
                             this.MessageReceived(msgOut);
+                        }
                     }
                 });
             }
@@ -127,13 +122,13 @@ namespace NetChat2Client.Windows
                 return null;
             }
 
-            var timeStamp = msg.SentTime.ToString("HH:mm:ss");
+            string timeStamp = msg.SentTime.ToString("HH:mm:ss");
 
             var timeRun = new Run(string.Format("[{0}]", timeStamp)) { FontWeight = FontWeights.Bold };
             var nameRun = new Run(string.Format(" {0}: ", msg.Contents[0])) { FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(msg.Color) };
 
-            var text = msg.Contents[1];
-            var toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));
+            string text = msg.Contents[1];
+            bool toMe = text.Contains(string.Format("@{0}", this.ChatClient.Alias));
 
             if (toMe)
             {
@@ -144,12 +139,12 @@ namespace NetChat2Client.Windows
             par.Inlines.Add(nameRun);
 
             var urlRegex = new Regex(UrlRegex);
-            var words = text.Split(' ');
+            string[] words = text.Split(' ');
             var nonLinkString = string.Empty;
 
             foreach (var wordTemp in words)
             {
-                var word = wordTemp;
+                string word = wordTemp;
                 if (urlRegex.IsMatch(word))
                 {
                     //probably a better idea to have all the words that aren't links in one run, rather than a run for
@@ -274,7 +269,7 @@ namespace NetChat2Client.Windows
                 //paragraph needs to be created in here otherwise when an exception gets thrown when it gets added to the
                 //rich text box
                 var par = new Paragraph { Margin = new Thickness(0) };
-                var timeStamp = tcpm.SentTime.ToString("HH:mm:ss");
+                string timeStamp = tcpm.SentTime.ToString("HH:mm:ss");
 
                 if (tcpm.MessageType.HasFlag(TcpMessageType.ErrorMessage))
                 {
@@ -318,7 +313,7 @@ namespace NetChat2Client.Windows
 
                 if (tcpm.MessageType.HasFlag(TcpMessageType.Message))
                 {
-                    var toMe = tcpm.Contents[1].Contains(string.Format("@{0}", this.ChatClient.Alias));
+                    bool toMe = tcpm.Contents[1].Contains(string.Format("@{0}", this.ChatClient.Alias));
                     par = this.ConstructMessageParagraph(tcpm);
 
                     if (toMe && !this.IsActive)

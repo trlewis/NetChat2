@@ -49,7 +49,7 @@ namespace NetChat2Client.Windows
 
         private void TryConfirmAlias()
         {
-            var newAlias = this.AliasEntryBox.Text.Trim();
+            string newAlias = this.AliasEntryBox.Text.Trim();
             if (newAlias.Length <= 0 || newAlias.Length > 15)
             {
                 this.AliasErrorVisibility = Visibility.Visible;

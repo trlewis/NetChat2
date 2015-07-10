@@ -42,7 +42,7 @@ namespace NetChat2Server
                     return;
                 }
 
-                var broadcastToList =
+                IList<ClientConnection> broadcastToList =
                     this._clientConnections.Where(c => c.ClientNum != connection.ClientNum && connection.IsConnected).ToList();
 
                 foreach (var client in broadcastToList)
@@ -54,7 +54,7 @@ namespace NetChat2Server
                     msg.MessageType.HasFlag(TcpMessageType.ClientDropped))
                 {
                     connection.IsConnected = false;
-                    var leftType = msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ? "left" : "dropped";
+                    string leftType = msg.MessageType.HasFlag(TcpMessageType.ClientLeft) ? "left" : "dropped";
                     printStr = string.Format(">> [{0}] Client No: {1} {2}", DateTime.Now, connection.Alias ?? connection.ClientNum, leftType);
                     this._clientConnections.Remove(connection);
                 }
@@ -83,7 +83,7 @@ namespace NetChat2Server
             while (true)
             {
                 //AcceptTcpClient() blocks, no need to sleep AFAIK
-                var clientSocket = this._serverSocket.AcceptTcpClient();
+                TcpClient clientSocket = this._serverSocket.AcceptTcpClient();
                 counter++;
                 Console.WriteLine(">> [{0}] Client No: {1} joined", DateTime.Now, counter);
 
@@ -96,7 +96,7 @@ namespace NetChat2Server
                 clientConnection.StartClient(clientSocket, counter.ToString(CultureInfo.InvariantCulture));
                 this._clientConnections.Add(clientConnection);
 
-                var clientNames = this._clientConnections.Where(c => c.IsConnected).Select(c => c.Alias).ToList();
+                IList<string> clientNames = this._clientConnections.Where(c => c.IsConnected).Select(c => c.Alias).ToList();
 
                 this._clientListMutex.ReleaseMutex();
 

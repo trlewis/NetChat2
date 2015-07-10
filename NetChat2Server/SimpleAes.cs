@@ -56,7 +56,7 @@ namespace NetChat2Server
 
         public byte[] Encrypt(string str)
         {
-            var bytes = this._utfEncoder.GetBytes(str);
+            byte[] bytes = this._utfEncoder.GetBytes(str);
 
             var memoryStream = new MemoryStream();
 
